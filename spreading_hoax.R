@@ -28,7 +28,7 @@ while(it <= num_iterations){
   #create the network
   #if there are skeptic/gullible set also the different gullibility
   if(type=="communities"){
-    source("fun_create_graph_with_gul_sk.R")
+    source("create_graph_communities.R")
     g <- create_network(N, M, segregation, gullible)
     for(i in 1:N){
       if (V(g)[i]$community==1){
