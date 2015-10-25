@@ -1,29 +1,30 @@
-#misinfo_spread
+# misinfo_spread
 
-Simulation of a hoax spreading process through a network
+Simulation model of a hoax-spreading process over a network.
 
-BEFORE RUNNING:
+## Instructions
 
-1.Set the working directory as the sources location directory 
+1.  Set the working directory as the sources location directory 
 
-2. Create 2 directorues in it: "plot" and "results"
+2.  Create 2 directories in it: "plot" and "results"
 
-*FILE hoax_spread_main*
+3.  Set the parameters of the simulation in `hoax_spread_main`. In particular
+   the `type` represents the topology of network. The following the options are
+   available:
+    
+    * `communities`: a network with two communities, gullible and skeptics:
+      in this case user has to set `segregation`, `gullible` (size),
+      `alpha_skeptical`, and `alpha_gullible`.
 
-Set the parameters. In particular "type" represents the chosen topology of network among the options:
+    * `barabasi`: use scale-free, Barabási-Albert network (see file
+      `spreading_hoax` for its creation parameters). In this case all agents
+      share the same value of alpha (`alpha_skeptical`).
 
-a) "communities" : a network with two communities, gullible and skeptics: in this case user has to set segregation, gullible (size), alpha_skeptical, alpha_gullible
+    * `random` : random network, given parameters `N` and `M`. The value of
+      alpha is the same for all agents (`alpha_skeptical`).
 
-b) "barabasi" : scale-free, barabasi-albert network (inside the file spreading_hoax it is possible to change the parameters of creation)
-
-c) "random" : random network, given N and M
-
-NOTE: when type="barabasi" or "random" there is a unique alpha for all the vertices, 
-and it is the parameter "alpha_skeptical"
-
-*FILE spreading_hoax*
-
-realize the simulation on the chosen network with the given parameters
-then ask if the user want to plot dynamics of the states BELIEVER, FACT-CHECKERS, SUSCEPTIBLE
-finally save the data in a ".RData" file in the subfolder "results"
-
+4.  Run the script `spreading_hoax`. It will perform the simulation on the
+    chosen network with the given parameters and then ask if the user wants to
+    plot the dynamics of the BELIEVER, FACT-CHECKERS, and SUSCEPTIBLE
+    compartments. Finally it saves the data in a ".RData" file in the subfolder
+    "results"
