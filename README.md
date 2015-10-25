@@ -8,7 +8,7 @@ Simulation model of a hoax-spreading process over a network.
 
 2.  Create 2 directories in it: "plot" and "results"
 
-3.  Set the parameters of the simulation in `hoax_spread_main`. In particular
+3.  Set the parameters of the simulation in `launch_simulation`. In particular
    the `type` represents the topology of network. The following the options are
    available:
     
