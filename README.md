@@ -23,7 +23,7 @@ Simulation model of a hoax-spreading process over a network.
     * `random` : random network, given parameters `N` and `M`. The value of
       alpha is the same for all agents (`alpha_skeptical`).
 
-4.  Run the script `spreading_hoax`. It will perform the simulation on the
+4.  Run the script `launch_simulation`. It will perform the simulation on the
     chosen network with the given parameters and then ask if the user wants to
     plot the dynamics of the BELIEVER, FACT-CHECKERS, and SUSCEPTIBLE
     compartments. Finally it saves the data in a ".RData" file in the subfolder
