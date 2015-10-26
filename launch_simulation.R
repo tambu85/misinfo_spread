@@ -21,13 +21,7 @@ segregation <- 0.6 #segregation value in [0.5,1]
 p_forget <- 0.1 #forgetting probability
 alpha_skeptical=0.05 #alpha skeptic group (or alpha, in case of barabasi/random with no communities)
 alpha_gullible=0.9 #alpha gullible group
+num_iterations = 2
 
 #SPREADING PROCESS WITH COMMUNITIES
 source("spreading_hoax.R")
-
-
-
-
-
-
-
