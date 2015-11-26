@@ -9,10 +9,12 @@ create_network <- function(num_nodes, num_edges, seg_value, gull_size){
   
   #initialize all skeptical
   V(g)$community= 1 #skeptical
+  V(g)[i]$color="white"
   
   #initialize gullible community
   for(i in 1:gullible_size){  
     V(g)[i]$community=2 #gullible
+    V(g)[i]$color="black"
   }
   
   #assign links
@@ -33,12 +35,12 @@ create_network <- function(num_nodes, num_edges, seg_value, gull_size){
     
     #check if arc is <= number of possible arc in a community...
     #...for gullible
-    while(V(g)[i]$community == 2 && arc_inter_g>= p_arc_gullible){
+    if(V(g)[i]$community == 2 && arc_inter_g>= p_arc_gullible){
       i=round(runif(1,1,N)) #select randomly node
     }
     
     #...and for skeptic
-    while(V(g)[i]$community == 1 && arc_inter_sk >= p_arc_skeptic){
+    if(V(g)[i]$community == 1 && arc_inter_sk >= p_arc_skeptic){
       i=round(runif(1,1,N)) #select randomly node
     }
     
