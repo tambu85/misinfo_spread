@@ -1,3 +1,6 @@
+#plot 3 graphs with different segregation values
+#for a better visualization plot separetly the three graphs
+
 library(igraph)
 source("create_graph_communities.R")
 N <- 1000
