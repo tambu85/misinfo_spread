@@ -11,7 +11,13 @@ topic=["hoaxy_three-syrian-refugees-assault-5-year-old-girl-at-knifepoint",
        "hoaxy_black-protesters-targeted-whites-in-milwaukee",
        "hoaxy_mexico-border-trump-elected",
        "hoaxy_julian-assange-bernie-sanders-was-threatened",
-       "hoaxy_deray-mckesson-and-the-summer-of-chaos"]
+       "hoaxy_deray-mckesson-and-the-summer-of-chaos",
+       "hoaxy_three-syrian-refugees-assault-5-year-old-girl-at-knifepoint_cum",
+       "hoaxy_black-protesters-targeted-whites-in-milwaukee_cum",
+       "hoaxy_mexico-border-trump-elected_cum",
+       "hoaxy_julian-assange-bernie-sanders-was-threatened_cum",
+       "hoaxy_deray-mckesson-and-the-summer-of-chaos_cum"
+       ]
 
 for i in range(len(topic)):
     filename = topic[i] + ".csv"
