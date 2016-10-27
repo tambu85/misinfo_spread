@@ -1,6 +1,10 @@
 
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+#read the data and create csv files for the hoax with more than 1000 total occurrences
+#uncomment some lines to change time granularity (by day, by hour)
+
+
 from urlparse import urlparse
 import pandas as pd
 from datetime import datetime
@@ -27,7 +31,6 @@ for i in range(len(hoaxy_data)) :
             url_dict[url] = 1
 
 #select only URLs with more than 1000 total occurences
-
 for keyurl in url_dict:
     if url_dict[keyurl]>1000 :
         topic = urlparse(keyurl).path
@@ -92,11 +95,6 @@ for keyurl in url_dict:
 
         df = df.sort_values(by='Date')
         df.to_csv(csvfile, index=False)
-
-
-
-
-
 
 
 
