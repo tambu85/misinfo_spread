@@ -28,11 +28,15 @@ def mf_noseg(T,tfact, a,netsize, ba_init,verify, dec):
     T_sim = np.sort(np.append(T_sim, T))
     T_sim_sorted = np.unique(T_sim)
 
+    ba_cum=0
+
     for i in T_sim_sorted:
 
         if (i in T):
             ab = int(float(pBA0) * N)
-            ba.append(ab)
+            print(ba_cum)
+            ba_cum = ab + ba_cum
+            ba.append(ba_cum)
 
         f = pBA0
         pBI1 = alpha * f * pS0 + (1. / tau) * pBA0 + (1. - pv) * (1. - f) * pBI0
@@ -74,12 +78,13 @@ def mf_noseg_plot(T, a,netsize, ba_init,verify, dec):
     pFI0=0.0
     pFA0=0.0
     pS0=1.-(pFA0+pFI0+pBA0+pBI0)
-
+    ba_cum=0
 
     for i in T:
 
         ab = int(float(pBA0) * N)
-        ba.append(ab)
+        ba_cum=ab+ba_cum
+        ba.append(ba_cum)
 
         f = pBA0
         pBI1 = alpha * f * pS0 + (1. / tau) * pBA0 + (1. - pv) * (1. - f) * pBI0
@@ -141,18 +146,18 @@ def mf_seg(T,tfact,a,netsize, gulsize, ba_init,verify_sk,segregation, dec):
     T_sim=np.sort(np.append(T_sim,T))
     T_sim_sorted=np.unique(T_sim)
 
+    b_cum=0
 
     for i in T_sim_sorted:
 
         if(i in T):
+
             baG = int(float(pBA0g) * gullible_size)
             baSK = int(float(pBA0sk) * skeptic_size)
-            #biG = int(float(pBI0g) * gullible_size)
-            #biSK = int(float(pBI0sk) * skeptic_size)
+            b_tot = baG + baSK
+            b_cum = b_cum + b_tot
+            b.append(b_cum)
 
-            #b_tot = baG + baSK + biG + biSK
-            b_tot= baG + baSK
-            b.append(b_tot)
 
         fg=s*pBA0g+(1-s)*pBA0sk
         if(i>0):
@@ -232,15 +237,17 @@ def mf_seg_plot(T,a,netsize, gulsize, ba_init,verify_sk,segregation, dec):
     pFI0sk=0.0
     pFA0sk=0.0
     pS0sk=1.-(pFA0sk+pFI0sk+pBA0sk+pBI0sk)
+    b_cum=0
 
     for i in T:
 
         baG = int(float(pBA0g) * gullible_size)
         baSK = int(float(pBA0sk) * skeptic_size)
-        #biG = int(float(pBI0g) * gullible_size)
-        #biSK = int(float(pBI0sk) * skeptic_size)
-        b_tot = baG + baSK # + biG + biSK
-        b.append(b_tot)
+        b_tot = baG + baSK
+        print(b_tot)
+        b_cum = b_cum + b_tot
+        print(b_cum)
+        b.append(b_cum)
 
 
         fg=s*pBA0g+(1-s)*pBA0sk
