@@ -365,4 +365,41 @@ def mf_seg_orig_FI(T, alpha, ONEoverN, ba_initg, bi_initg, ba_inits, bi_inits,
     
     return np.cumsum(np.asarray(ba)), np.cumsum(np.asarray(fa))
 
+#UNIFYING MODEL (Moreno et al., 2016)
+def sir_unified(T,  beta, alpha, delta1, delta2, gamma, eta, lamda, ONEoverN, X_init, Y_init, Z_init):
+    # Network and component sizes
+    N = 1. / ONEoverN
+    
+    X=[]
+    Y=[]
+    Z=[]
+    
+    for i in T:
+        
+        #record
+        X.append(X0)
+        Y.append(Y0)
+        Z.append(Z0)
+        
+        #update
+        a = exp(-lamda * (1 - delta1 - delta2) * Y0)
+        b = 1 - alpha * (Y0 + Z0)
+        c = 1 - beta * X0
+
+        X1 = Y0 * delta1 + Z0 * gamma
+        Y1 = X0 * eta + Z0 * (1 - gamma)
+        Z1 = X0 * (1 - eta) + Y0 * (1 - delta1)
+        
+        X0, Y0, Z0 = X1, Y1, Z1
+
+        if float(X0) <= 0.0000000001:
+            X0 = 0.0
+        if float(Y0) <= 0.0000000001:
+            Y0 = 0.0
+        if float(Z0) <= 0.0000000001:
+            Z0 = 0.0
+            
+    return np.cumsum(np.asarray(X)), np.cumsum(np.asarray(Y)), np.cumsum(np.asarray(Z)) 
+
+
 
