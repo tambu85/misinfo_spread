@@ -6,8 +6,8 @@
 library("igraph")
 
 #set parameters
-N <- 100 #net size
-M <- 294 #number edges
+N <- 1000 #net size
+M <- 2994 #number edges
 type <- "communities" #parameter to set net type among ["communities","barabasi","random"]
 time_init <- 1
 time_end <- 100
