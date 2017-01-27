@@ -5,23 +5,21 @@
 
 library("igraph")
 
-# parameters
-N <- 1000 #net size
-M <- 2994 #number edges
+#set parameters
+N <- 100 #net size
+M <- 294 #number edges
 type <- "communities" #parameter to set net type among ["communities","barabasi","random"]
-time_init=1
-time_end=200
-tau=1 #time step 
-red_init=0 #number of fact-checkers at t=0
-green_init=20 #number of believers at t=0
-beta <- 0.5 #spreading rate
-num_iterations <-2 #number of iterations
-gullible <- N/2 #size of gullible group
+time_init <- 1
+time_end <- 100
+timestep <- 1 #time step 
+fi_init <- 0 #number of fact-checkers at t=0
+ba_init <- 0.1*N #number of believers at t=0
+num_iterations <-3 #number of iterations
+gullible_size <- N/2 #size of gullible group
 segregation <- 0.6 #segregation value in [0.5,1]
-p_forget <- 0.1 #forgetting probability
-alpha_skeptical=0.05 #alpha skeptic group (or alpha, in case of barabasi/random with no communities)
-alpha_gullible=0.9 #alpha gullible group
-num_iterations = 2
-
+tau <- 0.1 #activity decay
+alpha <- 0.6 #credibility
+pv <- 0.05 #verifying probability (global or for skeptic group when type=communities, since for gullible it is set to 0)
 #SPREADING PROCESS WITH COMMUNITIES
-source("spreading_hoax.R")
+source("hoaxspread_create_net.R")
+source("hoaxspread_process.R")
