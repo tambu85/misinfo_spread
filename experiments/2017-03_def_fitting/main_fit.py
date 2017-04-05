@@ -91,14 +91,6 @@ for i in range(0,len(list_of_files)):
     print(max(FA))
 
     pp.figure()
-    pp.plot(t_empirical / 24., BA, 'b-',t_empirical / 24., FA, 'r-')
-    pp.xlabel("t (days)")
-    pp.ylabel("# Active on day t")
-    pp.title(file_name + "NO_SEG")
-    pp.legend(['FOR model', 'AGAINST model'], loc=7)
-    pp.savefig(path_output_fig + "-" + file_name + "_noseg.pdf")
-
-    pp.figure()
     pp.plot(t_empirical / 24., for_users, 'b+',
             t_empirical / 24., BA, 'b-',
             t_empirical / 24., against_users, 'r+',
