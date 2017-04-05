@@ -19,7 +19,8 @@ list_of_files=listdir(path_file)
 path_output_fig="/Users/marcella/PycharmProjects/untitled/"
 
 # threshold for when a contagion is said to have plateau
-plateau_threshold = 800;
+# 48, change to higher values if the time span of the hoax is larger
+plateau_threshold = 48;
 #print(plateau_threshold)
 
 #fit without segregation
