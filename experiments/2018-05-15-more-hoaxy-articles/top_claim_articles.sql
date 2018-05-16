@@ -1,10 +1,10 @@
 /* Return top 100 most shared claim articles from 2016/05/16 to 2017/03/31 (inclusive). Return URL and number of tweets */
 
 CREATE TEMP VIEW v AS
-    SELECT 
-        MAX(article.canonical_url) as url, 
+    SELECT
+        MAX(article.canonical_url) as url,
         COUNT(DISTINCT tweet.raw_id) AS num_tweets
-    FROM site 
+    FROM site
         JOIN url
         ON site.id = url.site_id
 
@@ -16,13 +16,13 @@ CREATE TEMP VIEW v AS
 
         JOIN article
         ON article.id = url.article_id
-    WHERE site.site_type = 'claim' 
+    WHERE site.site_type = 'claim'
         AND tweet.created_at BETWEEN '20160516' AND '20170331'
     GROUP BY article.group_id
     ORDER BY num_tweets DESC
     LIMIT 100
     ;
 
-\COPY (SELECT * FROM v) TO stdout WITH CSV HEADER;
+\COPY (SELECT * FROM v) TO top_claim_articles.csv WITH CSV HEADER
 
 DROP VIEW v;
