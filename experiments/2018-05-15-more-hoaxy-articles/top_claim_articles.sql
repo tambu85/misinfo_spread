@@ -18,11 +18,13 @@ CREATE TEMP VIEW v AS
         ON article.id = url.article_id
     WHERE site.site_type = 'claim'
         AND tweet.created_at BETWEEN '20160516' AND '20170331'
+        AND article.group_id IS NOT NULL
+        AND site.is_enabled IS TRUE
     GROUP BY article.group_id
     ORDER BY num_tweets DESC
     LIMIT 100
     ;
 
-\COPY (SELECT * FROM v) TO top_claim_articles.csv WITH CSV HEADER
+\COPY (SELECT * FROM v) TO stdout WITH CSV HEADER
 
 DROP VIEW v;
