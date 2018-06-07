@@ -17,7 +17,7 @@ CREATE TEMP VIEW v AS
         JOIN article
         ON article.id = url.article_id
     WHERE site.site_type = 'claim'
-        AND tweet.created_at BETWEEN '20160516' AND '20170331'
+        AND tweet.created_at BETWEEN '20160516' AND '20180331'
         AND article.group_id IS NOT NULL
         AND site.is_enabled IS TRUE
     GROUP BY article.group_id
