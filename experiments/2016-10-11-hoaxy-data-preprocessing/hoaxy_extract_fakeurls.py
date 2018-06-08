@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 """
@@ -6,9 +6,7 @@ Read the data and create csv files for the hoax with more than 1000 total
 occurrences. uncomment some lines to change time granularity (by day, by hour)
 """
 
-from urlparse import urlparse
 from datetime import datetime
-
 import pandas as pd
 
 filename = "tweets_timeline_185.csv"
@@ -23,7 +21,6 @@ url_dict = {}
 
 # create a dictionary to count the occurrences of each "topic" (fake or
 # debunking)
-print(len(hoaxy_data))
 for i in range(len(hoaxy_data)):
 
     if snopes_url[i] is not None:
@@ -35,28 +32,20 @@ for i in range(len(hoaxy_data)):
             url_dict[url] = 1
 
 
-# print url_dict
-# print max(url_dict)
 i = 0
-
 index = []
 fake_tot = []
 debunking_tot = []
 
 # select only URLs with more than 1000 total occurences
-print(len(url_dict))
 for keyurl in url_dict:
     if url_dict[keyurl] > 1000:
         i = i + 1
         index.append(i)
-        topic = urlparse(keyurl).path
         print("******")
         print(str(i))
-        # list.write("\t")
         print(keyurl)
-        # list.write("\t")
         print(str(url_dict[keyurl]))
-        # list.write("\n") #number of occurrences
         fake_dict = {}
         fake = 0
         debunking = 0
@@ -67,10 +56,8 @@ for keyurl in url_dict:
 
             if (snopes_url[j] == keyurl):  # for every single selected topic...
                 d = datetime.strptime(time[j], '%Y-%m-%d %H:%M:%S')
-                # print(d)
                 if(d < min_date):
                     min_date = d
-                    # print("MIN:"+str(min_date))
                 if(d > max_date):
                     max_date = d
 
@@ -120,4 +107,3 @@ myTable = pd.DataFrame(index,
                                 'FAKE NEWS TWEETS',
                                 'FACT CHECKING TWEETS'])
 print(myTable)
-# pandas.DataFrame.to_latex
