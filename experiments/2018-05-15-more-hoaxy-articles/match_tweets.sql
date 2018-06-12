@@ -80,15 +80,12 @@ as (
     on 
         url.id = ass_tweet_url.url_id 
     join 
-        article 
-    on 
-        url.article_id = article.id 
-    join 
         _matches
     on 
-        canonical_url like _matches.pattern
-    where 
-        article.group_id is not null 
+        canonical like _matches.pattern
+        OR aliased like _matches.pattern
+        OR expanded like _matches.pattern
+        OR raw like _matches.pattern
 );
 
 \COPY (SELECT * FROM results) TO stdout WITH CSV HEADER
