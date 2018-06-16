@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-""" Create curves for data fitting """
+""" Create curves for data fitting. Requires Pandas 0.18+ for new resampling
+interface. """
 
 from __future__ import print_function
 
@@ -148,16 +149,18 @@ def iterstories(df, freq='H', trim=True, mindeg=1.0):
         subdf = subdf.unstack(level=[1, 2])['active_users']
         subdf = subdf.loc[story_id].fillna(method='ffill').fillna(0)
         if trim:
+            # compute plateau for each individual curve; pick the longest and
+            # trim all series to the same length
             imax = subdf.apply(_trimplateau, axis=0, args=(mindeg,)).max()
             subdf = subdf.iloc[:imax]
             subdf = subdf.ffill()
-            for cols in subdf.columns:
-                if subdf[cols].isna().all():
-                    subdf.drop(columns=cols, inplace=True)
         if not subdf.empty:
+            # adjust column multi-index and remove those fastidious used in the
+            # SQL query to match tweets from Hoaxy
             idx = pandas.MultiIndex.from_tuples(list(subdf.columns))
             subdf.columns = idx   # resets column index
             subdf.rename(columns=lambda k: k.replace('%', ''), inplace=True)
+            # finally, yield the data frame and the new story_id
             yield i, subdf
             i += 1
 
@@ -165,6 +168,9 @@ def iterstories(df, freq='H', trim=True, mindeg=1.0):
 def main(args):
     df = pandas.read_csv(args.input, parse_dates=['created_at'])
     df = filterstories(df, args.min_tweets_total, args.min_tweets_each)
+    # Store data frame in HDF5 file, each data frame has its own key
+    #   /story_XX
+    # where XX is the ID of the story (01, 02, etc.)
     n_stories = len(df['story_id'].unique())
     key_digits = int(math.ceil(math.log10(n_stories)))
     key_template = 'story_{{:0{:d}d}}'.format(key_digits)
@@ -174,6 +180,9 @@ def main(args):
     urls = {}
     with store:
         for story_id, story_df in iterator:
+            # save the full URLs to dict that will be serialized as JSON,
+            # shorten the URL to the domain name. Handle cases when a website
+            # occurs multiple times (e.g. infowars.com, infowars.com_1, etc)
             urls[story_id] = defaultdict(list)
             for k, v in story_df.columns:
                 urls[story_id][k].append(v)
@@ -190,6 +199,7 @@ def main(args):
             key = key_template.format(story_id)
             store.put(key, story_df)
     print("Data written to {}.".format(args.output))
+    # serialize full URLs to JSON
     output_fname, _ = os.path.splitext(args.output)
     json_output = output_fname + os.path.extsep + 'json'
     with open(json_output, 'w') as f:
