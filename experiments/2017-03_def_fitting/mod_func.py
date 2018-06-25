@@ -12,6 +12,9 @@ def mf_noseg(T,alpha,ONEoverN, ba_init, bi_init, fa_init, fi_init, pv, tau):
     #Initial conditions
     pBI0, pBA0, pFI0, pFA0, pS0 = N*bi_init, N*ba_init, N*fa_init, N*fi_init, N*(1. - ba_init - bi_init)
 
+    N0 = pBI0 + pBA0 + pFI0 + pS0
+    assert np.allclose(N0, N), "Total number of agents does not match N: {}".format(N0)
+
     ba=[]
     fa=[]
 
@@ -28,7 +31,8 @@ def mf_noseg(T,alpha,ONEoverN, ba_init, bi_init, fa_init, fi_init, pv, tau):
         pFA1 = f * pFI0 + (1. - tau) * pFA0
         pS1 = (1 - f) * pS0
 
-        #print(round(pBA0+pBI0+pFA0+pFI0+pS0))
+        N1 = pBI1 + pBA1 + pFI1 + pS1
+        assert np.allclose(N0, N1), "Number of agents is not conserved after update: {}".format(N1)
 
         pBI0, pBA0, pFI0, pFA0, pS0 = pBI1, pBA1, pFI1, pFA1, pS1
 
