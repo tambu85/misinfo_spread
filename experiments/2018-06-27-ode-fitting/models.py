@@ -1,5 +1,7 @@
 import numpy
 
+__all__ = ['probmodel', 'simprobmodel', 'odemodel']
+
 
 def _checkparams(pv, tauinv, alpha):
     assert 0 <= pv <= 1, "pv: out of bounds: {}".format(pv)
@@ -9,15 +11,16 @@ def _checkparams(pv, tauinv, alpha):
 
 def probmodel(y, t, pv, tauinv, alpha):
     """
-    The model expressed as discrete probabilistic transitions. Returns the
-    value at the next time step, y(t + 1).
+    The model expressed as discrete probabilistic transitions. Returns state
+    value at the next time step, y(t + 1). Can be simulated using the
+    `simprobmodel` function.
     """
     _checkparams(pv, tauinv, alpha)
     y = numpy.asfarray(y)
     S, BI, BA, FI, FA = y
     N = y.sum()
     f = BA / N
-    dy = [
+    y1 = [
         # S (susceptibles)
         (1.0 - f) * S,
         # BI (believers, inactive)
@@ -30,7 +33,21 @@ def probmodel(y, t, pv, tauinv, alpha):
         # FA (fact-checkers, active)
         f * FI + (1.0 - tauinv) * FA
     ]
-    return dy
+    assert numpy.isclose(y1.sum(), N), "Number of agents changed"
+    return y1
+
+
+def simprobmodel(nsteps, f, y0, *args):
+    """
+    Simulate a probabilistic model by repeatedly applying the transition
+    rules. This is currently used to perform all simulations and fits.
+    """
+    tmp = [y0]
+    for i in range(nsteps - 1):
+        y1 = f(y0, i, *args)
+        tmp.append(y1)
+        y0 = y1
+    return numpy.asarray(tmp)
 
 
 def odemodel(y, t, pv, tauinv, alpha):
@@ -51,5 +68,5 @@ def odemodel(y, t, pv, tauinv, alpha):
         (1.0 - alpha) * f * S + pv * (BI + BA) + tauinv * FA - f * FI,  # FI
         f * FI - tauinv * FA  # FA
     ]
-    assert numpy.isclose(numpy.sum(dy), 0)
+    assert numpy.isclose(numpy.sum(dy), 0), "sum(dy) does not cancel out"
     return dy

@@ -6,27 +6,14 @@ import numpy
 import matplotlib.pyplot as plt
 import scipy.integrate
 
-from models import probmodel, odemodel
-
-
-def simprob(nsteps, f, y0, *args):
-    """
-    Simulate the probabilistic model by repeatedly applying the transition
-    rules. This is currently used to perform all simulations and fits.
-    """
-    tmp = [y0]
-    for i in range(nsteps - 1):
-        y1 = f(y0, i, *args)
-        tmp.append(y1)
-        y0 = y1
-    return numpy.asarray(tmp)
+from models import probmodel, odemodel, simprobmodel
 
 
 def compare(nsteps, y0, p):
     t = numpy.arange(nsteps)
 
     # Probabilistic model
-    yprob = simprob(nsteps, probmodel, y0, *p)
+    yprob = simprobmodel(nsteps, probmodel, y0, *p)
 
     # ODE model
     yrate = scipy.integrate.odeint(odemodel, y0, t, args=p, rtol=1e-8)
