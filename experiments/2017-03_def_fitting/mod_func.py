@@ -9,8 +9,8 @@ def mf_noseg(T, alpha, ONEoverN, ba_init, bi_init, fa_init, fi_init,
     N = 1. / ONEoverN
 
     # Initial conditions
-    pBI0, pBA0, pFI0, pFA0, pS0 = N*bi_init, N*ba_init, N*fa_init,\
-        N*fi_init, N*(1. - ba_init - bi_init)
+    pBI0, pBA0, pFI0, pFA0, pS0 = N * bi_init, N * ba_init, N * fi_init,\
+        N * fa_init, N * (1. - ba_init - bi_init - fi_init - fa_init)
 
     N0 = pBI0 + pBA0 + pFI0 + pS0
     assert np.allclose(N0, N), "Total number of agents does not "\
