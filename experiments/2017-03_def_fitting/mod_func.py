@@ -68,7 +68,7 @@ def mf_seg(T, alpha, ONEoverN, ba_init, bi_init, fa_init, fi_init, pvg, pvs,
     # Gullible
     pBI0g, pBA0g, pFI0g, pFA0g, pS0g = N_gullible * bi_init, N_gullible *\
         ba_init, N_gullible * fi_init, N_gullible * fa_init, N_gullible *\
-        (1. - (ba_init + bi_init))
+        (1. - (ba_init + bi_init + fa_init + fi_init))
     # Skeptical
     pBI0s, pBA0s, pFI0s, pFA0s, pS0s = N_skeptic * bi_init, N_skeptic * \
         ba_init, 0.0, 0.0, N_skeptic * (1. - (ba_init + bi_init))
