@@ -35,7 +35,7 @@ list_of_files = ['4th-mysterious-death-connected-to-the-dnc',
                  'tim-kaine-white-people-minority',
                  'yokohillary']
 
-path_file ="/Users/marcella/PycharmProjects/untitled/fit/"
+path_file = "/Users/marcella/PycharmProjects/untitled/fit/"
 
 for item in list_of_files:
 
@@ -86,12 +86,11 @@ for item in list_of_files:
                 aux_FA2 = np.array(wline, dtype=float)
             ct = ct + 1
 
-
     raw_data1 = {'Date': time,
-                'For_empirico': aux_for_users,
-                'For_BA': aux_BA,
-                'Against_empirico': aux_against_users,
-                'Against_FA': aux_FA}
+                 'For_empirico': aux_for_users,
+                 'For_BA': aux_BA,
+                 'Against_empirico': aux_against_users,
+                 'Against_FA': aux_FA}
 
     raw_data2 = {'Date': time2,
                  'For_empirico': aux_for_users2,
@@ -99,8 +98,10 @@ for item in list_of_files:
                  'Against_empirico': aux_against_users2,
                  'Against_FA': aux_FA2}
 
-    df1 = pd.DataFrame(raw_data1, columns=["Date", "For_empirico", "For_BA", "Against_empirico", "Against_FA"])
+    df1 = pd.DataFrame(raw_data1, columns=["Date", "For_empirico", "For_BA",
+                                           "Against_empirico", "Against_FA"])
     df1.to_csv(str(name1).replace('.out', '.csv'), index=False)
 
-    df2 = pd.DataFrame(raw_data2, columns=["Date", "For_empirico", "For_BA", "Against_empirico", "Against_FA"])
+    df2 = pd.DataFrame(raw_data2, columns=["Date", "For_empirico", "For_BA",
+                                           "Against_empirico", "Against_FA"])
     df2.to_csv(str(name2).replace('.out', '.csv'), index=False)
