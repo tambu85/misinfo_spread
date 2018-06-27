@@ -5,3 +5,6 @@
 *.pdf
 *.json
 *.hdf
+
+# vim swap files
+.*.swp
