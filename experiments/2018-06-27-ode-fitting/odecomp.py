@@ -6,7 +6,7 @@ import numpy
 import matplotlib.pyplot as plt
 import scipy.integrate
 
-from models import probmodel, odemodel, simprobmodel
+from models import probmodel, hoaxmodel, simprobmodel
 
 
 def compare(nsteps, y0, p):
@@ -16,9 +16,9 @@ def compare(nsteps, y0, p):
     yprob = simprobmodel(nsteps, probmodel, y0, *p)
 
     # ODE model
-    yrate = scipy.integrate.odeint(odemodel, y0, t, args=p, rtol=1e-8)
+    yrate = scipy.integrate.odeint(hoaxmodel, y0, t, args=p, rtol=1e-8)
 
-    ylabels = ["S", "BI", "BA", "FI", "FA"]
+    ylabels = ["BA", "FA", "BI", "FI", "S"]
     labels = ['Prob.', 'ODE']
     fig, axs = plt.subplots(nrows=2, ncols=3, figsize=(8, 5), sharex=True)
     for i, (ax, ylabel) in enumerate(zip(numpy.ravel(axs), ylabels)):
@@ -31,6 +31,7 @@ def compare(nsteps, y0, p):
 
     plt.legend(loc='best')
 
+    # plot the total number of agents
     plt.sca(axs[1, 2])
     plt.plot(t, yprob.sum(axis=1), ls='-', c='gray', label=labels[0],
              alpha=.75)
