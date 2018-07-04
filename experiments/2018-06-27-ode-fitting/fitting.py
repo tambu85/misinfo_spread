@@ -174,22 +174,34 @@ def fitone(data, modelfunc, n_vars, bounds, nrep=25, fity0=False,
     return best_res.x
 
 
-def fitmany(dataset, model):
-    pass
+def fitmany(datasets, modelfunc, n_vars, bounds, nrep=25, fity0=False,
+            y0base=None, aggfunc=None, **kwargs):
+    """
+    Applies `fitone` to all data arrays in the `datasets`.
+
+    Arguments
+    =========
+
+    datasets - sequence
+        A list/sequence of data arrays (see `fitone`)
+
+    ...
+        See `fitone`
+
+    Returns
+    =======
+    A list of results from `fitone`.
+
+    """
+    tmp = []
+    for data in datasets:
+        res = fitone(data, modelfunc, n_vars, bounds, nrep=nrep, fity0=fity0,
+                     y0base=y0base, aggfunc=aggfunc, **kwargs)
+        tmp.append(res)
+    return tmp
 
 
 if __name__ == '__main__':
-    import contextlib
-
-    @contextlib.contextmanager
-    def printoptions(*args, **kwargs):
-        original = numpy.get_printoptions()
-        numpy.set_printoptions(*args, **kwargs)
-        try:
-            yield
-        finally:
-            numpy.set_printoptions(**original)
-
     import models
     pv = 0.1
     tauinv = 0.1
@@ -226,6 +238,6 @@ if __name__ == '__main__':
     ]
     xopt2 = fitone(data, models.hoaxmodel, 5, bounds)
 
-    with printoptions(precision=2):
-        print(numpy.round(xopt1, 2))
-        print(numpy.round(xopt2, 2))
+    numpy.set_printoptions(precision=2, suppress=True)
+    print(numpy.round(xopt1, 2))
+    print(numpy.round(xopt2, 2))
