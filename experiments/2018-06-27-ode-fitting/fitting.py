@@ -8,6 +8,8 @@ import scipy.integrate
 import scipy.optimize
 # import argparse
 
+# TODO perhaps remove y0base? Since x_scale seems to work fine.
+
 
 def gendata(model, y0, t, sigma=0, *args):
     """
@@ -23,7 +25,8 @@ def gendata(model, y0, t, sigma=0, *args):
     return numpy.c_[t, y + yerr]
 
 
-def _genresidualsfunc(func, data, n_vars, fity0=False, y0base=None, **kwargs):
+def _genresidualsfunc(func, data, n_vars, fity0=False, y0base=None,
+                      aggfunc=None, i_obsvars=None, **kwargs):
     """
     Given a model and a 2D vector of empirical data, return a function that
     computes the residuals of the fit of the ODE model to the empirical data.
@@ -49,6 +52,12 @@ def _genresidualsfunc(func, data, n_vars, fity0=False, y0base=None, **kwargs):
     y0base : float
         See `fitone`.
 
+    aggfunc : callable(y)
+        See `fitone`
+
+    i_obsvars : list
+        See `fitone`
+
     Additional keyword arguments are passed to `scipy.integrate.odeint`.
 
     Returns
@@ -63,11 +72,27 @@ def _genresidualsfunc(func, data, n_vars, fity0=False, y0base=None, **kwargs):
             args = x[n_vars:]
         else:
             y0 = y[0]
-            args = x
+            n = n_vars - len(y0)
+            y0 = numpy.hstack([y0, x[:n]])
+            args = x[n:]
+        assert len(y0) == n_vars
         if y0base is not None:
             y0 = numpy.power(y0base, y0)
         yhat = scipy.integrate.odeint(func, y0, t, args=tuple(args), **kwargs)
-        yres = yhat[:, :n_obsvars] - y
+        # aggregate result of the integration. Needed with the segregated
+        # model.
+        if aggfunc is not None:
+            yhat = aggfunc(yhat)
+        # select observable variables for residials
+        if i_obsvars is not None:
+            # user specified column indices
+            assert len(i_obsvars) == n_obsvars, "Error: must match number "\
+                "of data variables: {}".format(i_obsvars)
+            yhat = yhat[:, i_obsvars]
+        else:
+            # by default use the fist n_obsvars
+            yhat = yhat[:, :n_obsvars]
+        yres = yhat - y
         return yres.ravel()
     if n_vars <= 0:
         raise ValueError('Error: n_vars must be > 0: {}'.format(n_vars))
@@ -82,7 +107,7 @@ def _genresidualsfunc(func, data, n_vars, fity0=False, y0base=None, **kwargs):
 
 
 def fitone(data, modelfunc, n_vars, bounds, nrep=25, fity0=False,
-           y0base=None, **kwargs):
+           y0base=None, aggfunc=None, **kwargs):
     """
     Fit one dataset to an ODE model. Performs the fit by minimizing a loss
     function of the residuals between the model and the data.
@@ -122,6 +147,10 @@ def fitone(data, modelfunc, n_vars, bounds, nrep=25, fity0=False,
         y0 needed to integrate, raise this base to the power of each exponent.
         The default is to not to use a log-transformation.
 
+    aggfunc : callable(y)
+        User-defined function that aggregates the integrated function before
+        computing residuals.
+
     Additional keyword arguments will be passed to `scipy.integrate.odeint`.
 
     Returns
@@ -137,7 +166,7 @@ def fitone(data, modelfunc, n_vars, bounds, nrep=25, fity0=False,
     for i in range(nrep):
         x0 = x0arr[i]
         _resid = _genresidualsfunc(modelfunc, data, n_vars, fity0=fity0,
-                                   y0base=y0base, **kwargs)
+                                   y0base=y0base, aggfunc=aggfunc, **kwargs)
         res = scipy.optimize.least_squares(_resid, x0, x_scale=x_scale,
                                            bounds=(lower_bounds, upper_bounds))
         tmp.append(res)
@@ -150,11 +179,30 @@ def fitmany(dataset, model):
 
 
 if __name__ == '__main__':
+    import contextlib
+
+    @contextlib.contextmanager
+    def printoptions(*args, **kwargs):
+        original = numpy.get_printoptions()
+        numpy.set_printoptions(*args, **kwargs)
+        try:
+            yield
+        finally:
+            numpy.set_printoptions(**original)
+
     import models
     pv = 0.1
     tauinv = 0.1
     alpha = 0.5
+    t = numpy.linspace(0, 10, 11)
+    sigma = 2
+    y0 = (1000, 0, 0, 0, 9000)
+    data = gendata(models.hoaxmodel, y0, t, sigma, pv, tauinv, alpha)
+    data = data[:, :3]
+
     N_max = 1e6
+
+    # Fit all initial conditions
     bounds = [
         (0, N_max),  # BA
         (0, N_max),  # FA
@@ -165,8 +213,19 @@ if __name__ == '__main__':
         (0, 1),  # tauinv
         (0, 1),  # alpha
     ]
-    t = numpy.linspace(0, 10, 11)
-    sigma = 2
-    y0 = (1000, 0, 0, 0, 9000)
-    data = gendata(models.hoaxmodel, y0, t, sigma, pv, tauinv, alpha)
-    xopt = fitone(data, models.hoaxmodel, 5, bounds, fity0=True)
+    xopt1 = fitone(data, models.hoaxmodel, 5, bounds, fity0=True)
+
+    # Fit only non-observed initial conditions
+    bounds = [
+        (0, N_max),  # BI
+        (0, N_max),  # FI
+        (0, N_max),  # S
+        (0, 1),  # pv
+        (0, 1),  # tauinv
+        (0, 1),  # alpha
+    ]
+    xopt2 = fitone(data, models.hoaxmodel, 5, bounds)
+
+    with printoptions(precision=2):
+        print(numpy.round(xopt1, 2))
+        print(numpy.round(xopt2, 2))
