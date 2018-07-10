@@ -157,6 +157,9 @@ def fitone(data, modelfunc, n_vars, bounds, nrep=25, fity0=False,
     =======
     xopt : ndarray
         Array of fitted parameter values.
+
+    erropt : ndarray
+        Standard errors of the fitted values
     """
     lower_bounds, upper_bounds = zip(*bounds)
     size = (nrep, len(bounds))
@@ -171,7 +174,33 @@ def fitone(data, modelfunc, n_vars, bounds, nrep=25, fity0=False,
                                            bounds=(lower_bounds, upper_bounds))
         tmp.append(res)
     best_res = min(tmp, key=lambda k: k.cost)
-    return best_res.x
+    return best_res.x, _stderr(best_res)
+
+
+def _stderr(res):
+    """
+    Compute standard error of the fitted parameters
+    """
+    # Code adapted from: scipy.optimize.curve_fit
+    # Do Moore-Penrose inverse discarding zero singular values.
+    from scipy.linalg import svd
+    _, s, VT = svd(res.jac, full_matrices=False)
+    threshold = numpy.finfo(float).eps * max(res.jac.shape) * s[0]
+    s = s[s > threshold]
+    VT = VT[:s.size]
+    pcov = numpy.dot(VT.T / s**2, VT)
+    return 1.96 * numpy.sqrt(numpy.diag(pcov))
+
+
+def relabserr(data, modelfunc, x):
+    """
+    Relative absolute error
+    """
+    t = data[:, 0]
+    y = data[:, 1:]
+    yh = modelfunc(y, t, x)
+    e = numpy.ravel(numpy.abs((y - yh) / y)).sum() / data.size
+    return e
 
 
 def fitmany(datasets, modelfunc, n_vars, bounds, nrep=25, fity0=False,
