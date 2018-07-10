@@ -1,16 +1,49 @@
+"""
+Rumor diffusion models
+
+Contents
+========
+
+1. Hoax model by Tambuscio et al. (2018). See `hoaxmodel`.
+
+2. Segregated Hoax model by Tambuscio et al. (2018). See `hoaxmodelseg`.
+
+3. SIR (Susceptible-Infected-Recovered). See `sir`.
+
+4. Double SIR (i.e., two independent SIR processes). See `doublesir`.
+
+5. SEIZ (Susceptible-Exposed-Infected-Skeptic) by Jin et al. (2013). See
+`seiz`.
+"""
+
 import numpy
+import json
 
 # TODO write ODE for the following deterministic models
-# 1. [DONE] The "segregated" model.
-# 2. The normal SIR (I = believers, R = fact-checkers)
-# 3. Double independent SIR (I1 = believers, I2 = fact-checkers)
-# 4. [DONE] The SEIZ model by Jin et al. (Virginia Tech)
-# 5. The model by Bettencourt et al.
-# 6. The DK model by Daley and Kendall (see review by Vespignani et al.)
-# 7. The MT model by Maki and Thompson
-# 8. The model by Nekovee et al. ("Theory of rumor spreading in complex social
-# networks")
-# 9. The "Higgs rumor" model by Yamir Moreno and Sandro Meloni(?).
+#  1. The model by Bettencourt et al.
+#  2. The DK model by Daley and Kendall (see review by Vespignani et al.)
+#  3. The MT model by Maki and Thompson
+#  4. The model by Nekovee et al. ("Theory of rumor spreading in complex social
+#     networks")
+#  5. The "Higgs rumor" model by De Domenico et al. (2013).
+#  6. The "unified" spreading model by Ferraz de Arruda et al. (2016)
+
+
+_JSON_FNAME = "_metadata.json"
+
+
+def getmetadata(name):
+    global _JSON_FNAME
+    import os
+    import contextlib
+    _MOD_DIR = os.path.dirname(__file__)
+    _JSON_PATH = os.path.join(_MOD_DIR, _JSON_FNAME)
+    if not os.path.exists(_JSON_PATH):
+        raise ImportError("Cannot find bound data: {}".format(_JSON_PATH))
+    with contextlib.closing(open(_JSON_PATH)) as f:
+        obj = json.load(f)[name]
+        obj['bounds'] = map(tuple, obj['bounds'])
+    return dict(zip(obj['names'], obj['bounds']))
 
 
 # -----------------------------------------------------------------------------
@@ -21,13 +54,6 @@ def _checkparams(pv, tauinv, alpha):
     assert 0 <= pv <= 1, "pv: out of bounds: {}".format(pv)
     assert 0 <= alpha <= 1, "alpha: out of bounds: {}".format(alpha)
     assert 0 <= tauinv <= 1, "tauinv: out of bounds: {}".format(tauinv)
-
-
-hoaxmodel_bounds = [
-    (0, 1),  # pv
-    (0, 1),  # tauinv
-    (0, 1),  # alpha
-]
 
 
 def hoaxmodel(y, t, pv, tauinv, alpha):
@@ -89,16 +115,6 @@ def _checkparamsseg(pv, tauinv, alphagu, alphask, s, gamma):
     assert 0 <= tauinv <= 1, "tauinv: out of bounds: {}".format(tauinv)
     assert 0 <= s <= 1, "s: out of bounds: {}".format(s)
     assert 0 <= gamma <= 1, "gamma: out of bounds: {}".format(gamma)
-
-
-hoaxmodelseg_bounds = [
-    (0, 1),  # pv
-    (0, 1),  # alphagu
-    (0, 1),  # alphask
-    (0, 1),  # tauinv
-    (0, 1),  # s
-    (0, 1),  # gamma
-]
 
 
 def hoaxmodelseg_aggfunc(y):
@@ -220,15 +236,56 @@ def seiz(Y, t, rho, l, b, beta, p, epsilon):
     return dY
 
 
-# TODO must choose bounds for rates (pho, b, beta), cannot just set them to 1
-seiz_bounds = [
-    (0, 1),  # pho
-    (0, 1),  # l
-    (0, 1),  # b
-    (0, 1),  # beta
-    (0, 1),  # p
-    (0, 1),  # epsilon
-]
+# -----------------------------------------------------------------------------
+# SIR
+# -----------------------------------------------------------------------------
+
+def sir(y, t, beta, mu):
+    """
+    The SIR model
+
+    State:
+        S - susceptible
+        I - infected
+        R - recovered
+
+    Transitions:
+        S -> I
+        I -> R
+
+    Parameters:
+        beta - infection rate
+        mu - recovery rate
+    """
+    y = numpy.asfarray(y)
+    S, I, R = y
+    N = y.sum()
+    dy = [
+        - beta * I / N * S,  # S
+        beta * I / N * S - mu * I,  # I
+        mu * I  # R
+    ]
+    assert numpy.isclose(dy.sum(), 0), "sum(dy) is not zero"
+    return dy
+
+
+# -----------------------------------------------------------------------------
+# Double SIR
+# -----------------------------------------------------------------------------
+
+def doublesir(y, t, beta1, mu1, beta2, mu2):
+    """
+    Two independent SIR models
+
+    See `sir`.
+    """
+    y = numpy.asfarray(y)
+    S1, I1, R1, S2, I2, R2 = y
+    dy1 = sir([S1, I1, R1], t, beta1, mu1)
+    dy2 = sir([S2, I2, R2], t, beta2, mu2)
+    dy = numpy.hstack([dy1, dy2])
+    assert numpy.isclose(dy.sum(), 0), "sum(dy) is not zero"
+    return dy
 
 
 # -----------------------------------------------------------------------------

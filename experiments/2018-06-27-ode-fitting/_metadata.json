@@ -1,0 +1,27 @@
+{
+  "hoaxmodel": {
+    "names": ["pv", "tauinv", "alpha"],
+    "bounds": [[0, 1], [0, 1], [0, 1]]
+  },
+
+  "hoaxmodelseg": {
+    "names": ["pvgu", "psk", "tauinv", "alpha", "s", "gamma"],
+    "bounds": [[0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1]]
+  },
+
+  "seiz": {
+    "names": ["pho", "l", "b", "beta", "p", "epsilon"],
+    "bounds": [[0, 1],  [0, 1], [0, 1], [0, 1], [0, 1], [0, 1]]
+  },
+
+  "sir": {
+    "names" : ["beta", "mu"],
+    "bounds" : [[0, 1], [0, 1]]
+  },
+
+  "doublesir": {
+    "names": ["beta1", "mu1", "beta2", "mu2"],
+    "bounds": [[0, 1], [0, 1], [0, 1], [0, 1]]
+  }
+
+}
