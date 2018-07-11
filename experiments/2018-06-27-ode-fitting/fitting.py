@@ -9,6 +9,7 @@ import scipy.optimize
 # import argparse
 
 # TODO perhaps remove y0base? Since x_scale seems to work fine.
+# TODO compute Chi square
 
 
 def gendata(model, y0, t, sigma=0, *args):
@@ -26,7 +27,7 @@ def gendata(model, y0, t, sigma=0, *args):
 
 
 def _genresidualsfunc(func, data, n_vars, fity0=False, y0base=None,
-                      aggfunc=None, i_obsvars=None, **kwargs):
+                      aggfunc=None, i_fitvars=None, **kwargs):
     """
     Given a model and a 2D vector of empirical data, return a function that
     computes the residuals of the fit of the ODE model to the empirical data.
@@ -55,7 +56,7 @@ def _genresidualsfunc(func, data, n_vars, fity0=False, y0base=None,
     aggfunc : callable(y)
         See `fitone`
 
-    i_obsvars : list
+    i_fitvars : list
         See `fitone`
 
     Additional keyword arguments are passed to `scipy.integrate.odeint`.
@@ -84,14 +85,14 @@ def _genresidualsfunc(func, data, n_vars, fity0=False, y0base=None,
         if aggfunc is not None:
             yhat = aggfunc(yhat)
         # select observable variables for residials
-        if i_obsvars is not None:
+        if i_fitvars is not None:
             # user specified column indices
-            assert len(i_obsvars) == n_obsvars, "Error: must match number "\
-                "of data variables: {}".format(i_obsvars)
-            yhat = yhat[:, i_obsvars]
+            assert len(i_fitvars) == n_obsvars, "Error: must match number "\
+                "of data variables: {}".format(i_fitvars)
+            yhat = yhat[:, i_fitvars]
         else:
             # by default use the fist n_obsvars
-            yhat = yhat[:, :n_obsvars]
+            yhat = yhat[:, :n_datavars]
         yres = yhat - y
         return yres.ravel()
     if n_vars <= 0:
@@ -99,7 +100,7 @@ def _genresidualsfunc(func, data, n_vars, fity0=False, y0base=None,
     data = numpy.atleast_2d(data)
     t = data[:, 0]
     y = data[:, 1:]
-    _, n_obsvars = y.shape
+    _, n_datavars = y.shape
     if n_vars < n_obsvars:
         raise ValueError("Error: Not enough variables to fit (needs {}): "
                          "{}".format(n_obsvars, n_vars))
@@ -107,7 +108,7 @@ def _genresidualsfunc(func, data, n_vars, fity0=False, y0base=None,
 
 
 def fitone(data, modelfunc, n_vars, bounds, nrep=25, fity0=False,
-           y0base=None, aggfunc=None, **kwargs):
+           y0base=None, aggfunc=None, i_fitvars=None, **kwargs):
     """
     Fit one dataset to an ODE model. Performs the fit by minimizing a loss
     function of the residuals between the model and the data.
@@ -151,6 +152,10 @@ def fitone(data, modelfunc, n_vars, bounds, nrep=25, fity0=False,
         User-defined function that aggregates the integrated function before
         computing residuals.
 
+    i_fitvars : sequence of ints
+        Optional; indices for the columns of the variables to use in the fit.
+        By default the first leftmost variables returned by the model are used.
+
     Additional keyword arguments will be passed to `scipy.integrate.odeint`.
 
     Returns
@@ -169,7 +174,8 @@ def fitone(data, modelfunc, n_vars, bounds, nrep=25, fity0=False,
     for i in range(nrep):
         x0 = x0arr[i]
         _resid = _genresidualsfunc(modelfunc, data, n_vars, fity0=fity0,
-                                   y0base=y0base, aggfunc=aggfunc, **kwargs)
+                                   y0base=y0base, aggfunc=aggfunc,
+                                   i_fitvars=i_fitvars, **kwargs)
         res = scipy.optimize.least_squares(_resid, x0, x_scale=x_scale,
                                            bounds=(lower_bounds, upper_bounds))
         tmp.append(res)
@@ -254,7 +260,8 @@ if __name__ == '__main__':
         (0, 1),  # tauinv
         (0, 1),  # alpha
     ]
-    xopt1 = fitone(data, models.hoaxmodel, 5, bounds, fity0=True)
+    xopt1, err1 = fitone(data, models.hoaxmodel, 5, bounds, fity0=True,
+                         nrep=1)
 
     # Fit only non-observed initial conditions
     bounds = [
@@ -265,8 +272,9 @@ if __name__ == '__main__':
         (0, 1),  # tauinv
         (0, 1),  # alpha
     ]
-    xopt2 = fitone(data, models.hoaxmodel, 5, bounds)
+    xopt2, err2 = fitone(data, models.hoaxmodel, 5, bounds,
+                         nrep=1)
 
     numpy.set_printoptions(precision=2, suppress=True)
-    print(numpy.round(xopt1, 2))
-    print(numpy.round(xopt2, 2))
+    print("{} +/- {}".format(numpy.round(xopt1, 2), numpy.round(err1, 2)))
+    print("{} +/- {}".format(numpy.round(xopt2, 2), numpy.round(err2, 2)))
