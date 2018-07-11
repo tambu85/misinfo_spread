@@ -32,7 +32,7 @@ import json
 _JSON_FNAME = "_metadata.json"
 
 
-def getmetadata(name):
+def _getmetadata(name):
     global _JSON_FNAME
     import os
     import contextlib
@@ -41,9 +41,18 @@ def getmetadata(name):
     if not os.path.exists(_JSON_PATH):
         raise ImportError("Cannot find bound data: {}".format(_JSON_PATH))
     with contextlib.closing(open(_JSON_PATH)) as f:
-        obj = json.load(f)[name]
-        obj['bounds'] = map(tuple, obj['bounds'])
+        return json.load(f)[name]
+
+
+def getbounds(name):
+    obj = _getmetadata(name)
+    obj['bounds'] = map(tuple, obj['bounds'])
     return dict(zip(obj['names'], obj['bounds']))
+
+
+def getstates(name):
+    obj = _getmetadata(name)
+    return obj['states']
 
 
 # -----------------------------------------------------------------------------
@@ -90,15 +99,15 @@ def hoaxmodel(y, t, pv, tauinv, alpha):
     """
     _checkparams(pv, tauinv, alpha)
     y = numpy.asfarray(y)
-    BA, FA, BI, FI, S = y
+    S, BI, BA, FI, FA = y
     N = y.sum()
     f = BA / N
     dy = [
-        f * BI - (tauinv + pv) * BA,  # BA
-        f * FI - tauinv * FA,  # FA
-        alpha * f * S + tauinv * BA - (f + pv) * BI,  # BI
-        (1.0 - alpha) * f * S + pv * (BI + BA) + tauinv * FA - f * FI,  # FI
         -f * S,  # S
+        alpha * f * S + tauinv * BA - (f + pv) * BI,  # BI
+        f * BI - (tauinv + pv) * BA,  # BA
+        (1.0 - alpha) * f * S + pv * (BI + BA) + tauinv * FA - f * FI,  # FI
+        f * FI - tauinv * FA,  # FA
     ]
     assert numpy.isclose(numpy.sum(dy), 0), "sum(dy) does not cancel out"
     return dy
@@ -136,16 +145,16 @@ def hoaxmodelseg(y, t, pvgu, pvsk, tauinv, alpha, s, gamma):
 
     State
     =====
-        BA_gu  - active believers gullible
-        BA_sk  - active believers skeptic
-        FA_gu  - active fact-checkers gullible
-        FA_sk  - active fact-checkers skeptic
-        BI_gu  - inactive believers gullible
-        BI_sk  - inactive believers skeptic
-        FI_gu  - inactive fact-checkers gullible
-        FI_sk  - inactive fact-checkers skeptic
         S_gu   - susceptible gullible
         S_sk   - susceptible skeptic
+        BI_gu  - inactive believers gullible
+        BI_sk  - inactive believers skeptic
+        BA_gu  - active believers gullible
+        BA_sk  - active believers skeptic
+        FI_gu  - inactive fact-checkers gullible
+        FI_sk  - inactive fact-checkers skeptic
+        FA_gu  - active fact-checkers gullible
+        FA_sk  - active fact-checkers skeptic
 
     Parameters
     ==========
@@ -165,23 +174,23 @@ def hoaxmodelseg(y, t, pvgu, pvsk, tauinv, alpha, s, gamma):
     """
     _checkparamsseg(pvgu, pvsk, tauinv, alpha, s, gamma)
     y = numpy.asfarray(y)
-    BAgu, BAsk, FAgu, FAsk, BIgu, BIsk, FIgu, FIsk, Sgu, Ssk = y
+    Sgu, Ssk, BIgu, BIsk, BAgu, BAsk, FIgu, FIsk, FAgu, FAsk = y
     N = y.sum()
     fgu = s * gamma * BAgu / N + (1 - s) * (1 - gamma) * BAsk / N
     fsk = s * (1 - gamma) * BAgu / N + (1 - s) * gamma * BAsk / N
     dy = [
-        fgu * BIgu - (tauinv + pvgu) * BAgu,  # BAgu
-        fsk * BIsk - (tauinv + pvsk) * BAsk,  # BAsk
-        fgu * FIgu - tauinv * FAgu,  # FAgu
-        fsk * FIsk - tauinv * FAsk,  # FAsk
+        -fgu * Sgu,  # Sgu
+        -fsk * Ssk,  # Ssk
         alpha * fgu * Sgu + tauinv * BAgu - (fgu + pvgu) * BIgu,  # BIgu
         alpha * fsk * Ssk + tauinv * BAsk - (fsk + pvsk) * BIsk,  # BIsk
+        fgu * BIgu - (tauinv + pvgu) * BAgu,  # BAgu
+        fsk * BIsk - (tauinv + pvsk) * BAsk,  # BAsk
         (1.0 - alpha) * fgu * Sgu + pvgu * (BIgu + BAgu) + tauinv * FAgu - \
         fgu * FIgu,  # FIgu
         (1.0 - alpha) * fsk * Ssk + pvsk * (BIsk + BAsk) + tauinv * FAsk - \
         fsk * FIsk,  # FIsk
-        -fgu * Sgu,  # Sgu
-        -fsk * Ssk,  # Ssk
+        fgu * FIgu - tauinv * FAgu,  # FAgu
+        fsk * FIsk - tauinv * FAsk,  # FAsk
     ]
     assert numpy.isclose(numpy.sum(dy), 0), "sum(dy) does not cancel out"
     return dy

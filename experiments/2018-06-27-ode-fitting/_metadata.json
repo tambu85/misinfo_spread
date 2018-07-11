@@ -1,27 +1,32 @@
 {
   "hoaxmodel": {
     "names": ["pv", "tauinv", "alpha"],
-    "bounds": [[0, 1], [0, 1], [0, 1]]
+    "bounds": [[0, 1], [0, 1], [0, 1]],
+    "states": ["S", "BI", "BA", "FI", "FA"]
   },
 
   "hoaxmodelseg": {
     "names": ["pvgu", "psk", "tauinv", "alpha", "s", "gamma"],
-    "bounds": [[0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1]]
+    "bounds": [[0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1]],
+    "states": ["S_gu", "S_sk", "BI_gu", "BI_sk", "BA_gu", "BA_sk", "FI_gu", "FI_sk", "FA_gu", "FA_sk"]
+
   },
 
   "seiz": {
     "names": ["pho", "l", "b", "beta", "p", "epsilon"],
-    "bounds": [[0, 1],  [0, 1], [0, 1], [0, 1], [0, 1], [0, 1]]
+    "bounds": [[0, 1],  [0, 1], [0, 1], [0, 1], [0, 1], [0, 1]],
+    "states": ["S", "E", "I", "Z"]
   },
 
   "sir": {
     "names" : ["beta", "mu"],
-    "bounds" : [[0, 1], [0, 1]]
+    "bounds" : [[0, 1], [0, 1]],
+    "states": ["S", "I", "R"]
   },
 
   "doublesir": {
     "names": ["beta1", "mu1", "beta2", "mu2"],
-    "bounds": [[0, 1], [0, 1], [0, 1], [0, 1]]
+    "bounds": [[0, 1], [0, 1], [0, 1], [0, 1]],
+    "states": ["S1", "I1", "R1", "S2", "I2", "R2"]
   }
-
 }
