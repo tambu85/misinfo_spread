@@ -18,6 +18,8 @@ Contents
 
 import numpy
 import json
+import os
+import contextlib
 
 # TODO write ODE for the following deterministic models
 #  1. The model by Bettencourt et al.
@@ -30,29 +32,20 @@ import json
 
 
 _JSON_FNAME = "_metadata.json"
+_MOD_DIR = os.path.dirname(__file__)
+_JSON_PATH = os.path.join(_MOD_DIR, _JSON_FNAME)
+if not os.path.exists(_JSON_PATH):
+    raise ImportError("Cannot find bound data: {}".format(_JSON_PATH))
+with contextlib.closing(open(_JSON_PATH)) as f:
+    _meta = json.load(f)
 
-
-def _getmetadata(name):
-    global _JSON_FNAME
-    import os
-    import contextlib
-    _MOD_DIR = os.path.dirname(__file__)
-    _JSON_PATH = os.path.join(_MOD_DIR, _JSON_FNAME)
-    if not os.path.exists(_JSON_PATH):
-        raise ImportError("Cannot find bound data: {}".format(_JSON_PATH))
-    with contextlib.closing(open(_JSON_PATH)) as f:
-        return json.load(f)[name]
-
-
-def getbounds(name):
-    obj = _getmetadata(name)
+ 
+def getmetadata(name):
+    obj = _meta[name]
     obj['bounds'] = map(tuple, obj['bounds'])
-    return dict(zip(obj['names'], obj['bounds']))
-
-
-def getstates(name):
-    obj = _getmetadata(name)
-    return obj['states']
+    if obj['agg']:
+        obj['aggfunc'] = globals()[name + '_aggfunc']
+    return obj
 
 
 # -----------------------------------------------------------------------------

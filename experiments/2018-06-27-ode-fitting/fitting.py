@@ -87,11 +87,11 @@ def _genresidualsfunc(func, data, n_vars, fity0=False, y0base=None,
         # select observable variables for residials
         if i_fitvars is not None:
             # user specified column indices
-            assert len(i_fitvars) == n_obsvars, "Error: must match number "\
+            assert len(i_fitvars) == n_datavars, "Error: must match number "\
                 "of data variables: {}".format(i_fitvars)
             yhat = yhat[:, i_fitvars]
         else:
-            # by default use the fist n_obsvars
+            # by default use the fist n_datavars
             yhat = yhat[:, :n_datavars]
         yres = yhat - y
         return yres.ravel()
@@ -101,9 +101,9 @@ def _genresidualsfunc(func, data, n_vars, fity0=False, y0base=None,
     t = data[:, 0]
     y = data[:, 1:]
     _, n_datavars = y.shape
-    if n_vars < n_obsvars:
+    if n_vars < n_datavars:
         raise ValueError("Error: Not enough variables to fit (needs {}): "
-                         "{}".format(n_obsvars, n_vars))
+                         "{}".format(n_datavars, n_vars))
     return _fitresiduals
 
 
@@ -156,7 +156,8 @@ def fitone(data, modelfunc, n_vars, bounds, nrep=25, fity0=False,
         Optional; indices for the columns of the variables to use in the fit.
         By default the first leftmost variables returned by the model are used.
 
-    Additional keyword arguments will be passed to `scipy.integrate.odeint`.
+    Additional keyword arguments will be passed to
+    `scipy.optimize.least_squares`.
 
     Returns
     =======
@@ -175,9 +176,10 @@ def fitone(data, modelfunc, n_vars, bounds, nrep=25, fity0=False,
         x0 = x0arr[i]
         _resid = _genresidualsfunc(modelfunc, data, n_vars, fity0=fity0,
                                    y0base=y0base, aggfunc=aggfunc,
-                                   i_fitvars=i_fitvars, **kwargs)
+                                   i_fitvars=i_fitvars)
         res = scipy.optimize.least_squares(_resid, x0, x_scale=x_scale,
-                                           bounds=(lower_bounds, upper_bounds))
+                                           bounds=(lower_bounds, upper_bounds),
+                                           **kwargs)
         tmp.append(res)
     best_res = min(tmp, key=lambda k: k.cost)
     return best_res.x, _stderr(best_res)
@@ -249,7 +251,7 @@ if __name__ == '__main__':
 
     N_max = 1e6
 
-    # Fit all initial conditions
+    # All initial conditions are unknown parameters to fit
     bounds = [
         (0, N_max),  # BA
         (0, N_max),  # FA
@@ -263,7 +265,7 @@ if __name__ == '__main__':
     xopt1, err1 = fitone(data, models.hoaxmodel, 5, bounds, fity0=True,
                          nrep=1)
 
-    # Fit only non-observed initial conditions
+    # Only BI/FI/S are unknown parameters to fit, but no BA/FA
     bounds = [
         (0, N_max),  # BI
         (0, N_max),  # FI
