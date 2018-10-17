@@ -330,7 +330,7 @@ def probmodel(y, t, pv, tauinv, alpha):
         # S (susceptibles)
         (1.0 - f) * S,
     ]
-    assert numpy.isclose(y1.sum(), N), "Number of agents changed"
+    assert numpy.isclose(numpy.sum(y1), N), "Number of agents changed"
     return y1
 
 
