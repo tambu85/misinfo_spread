@@ -9,7 +9,7 @@
 
   "hoaxmodelseg": {
     "names": ["pvgu", "psk", "tauinv", "alpha", "s", "gamma"],
-    "bounds": [[0, 1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1]],
+    "bounds": [[0, 1], [0, 1], [0, 1], [0, 1], [0.5, 1], [0, 1]],
     "states": ["S_gu", "S_sk", "BI_gu", "BI_sk", "BA_gu", "BA_sk", "FI_gu", "FI_sk", "FA_gu", "FA_sk"],
     "fit_idx": [2, 4],
     "agg": true

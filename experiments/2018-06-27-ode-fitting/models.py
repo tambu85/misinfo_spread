@@ -32,7 +32,7 @@ import contextlib
 
 
 _JSON_FNAME = "_metadata.json"
-_MOD_DIR = os.path.dirname(__file__)
+_MOD_DIR = os.path.dirname(__file__) #workingdir
 _JSON_PATH = os.path.join(_MOD_DIR, _JSON_FNAME)
 if not os.path.exists(_JSON_PATH):
     raise ImportError("Cannot find bound data: {}".format(_JSON_PATH))
@@ -115,7 +115,7 @@ def _checkparamsseg(pv, tauinv, alphagu, alphask, s, gamma):
     assert 0 <= alphagu <= 1, "alphagu: out of bounds: {}".format(alphagu)
     assert 0 <= alphask <= 1, "alphask: out of bounds: {}".format(alphask)
     assert 0 <= tauinv <= 1, "tauinv: out of bounds: {}".format(tauinv)
-    assert 0 <= s <= 1, "s: out of bounds: {}".format(s)
+    assert 0.5 <= s <= 1, "s: out of bounds: {}".format(s)
     assert 0 <= gamma <= 1, "gamma: out of bounds: {}".format(gamma)
 
 
@@ -314,23 +314,24 @@ def probmodel(y, t, pv, tauinv, alpha):
     """
     _checkparams(pv, tauinv, alpha)
     y = numpy.asfarray(y)
-    BA, FA, BI, FI, S = y
+    S, BI, BA, FI, FA = y
     N = y.sum()
     f = BA / N
     y1 = [
-        # BA (believers, active)
-        (1.0 - pv) * f * BI + (1.0 - tauinv) * (1.0 - pv) * BA,
-        # FA (fact-checkers, active)
-        f * FI + (1.0 - tauinv) * FA,
+        # S (susceptibles)
+        (1.0 - f) * S,
         # BI (believers, inactive)
         alpha * f * S + tauinv * BA + (1.0 - pv) * (1.0 - f) * BI,
+        # BA (believers, active)
+        (1.0 - pv) * f * BI + (1.0 - tauinv) * (1.0 - pv) * BA,
         # FI (fact-checkers, inactive)
         (1.0 - alpha) * f * S + tauinv * FA + pv * BI + pv * (1.0 - tauinv) \
         * BA + (1.0 - f) * FI,
-        # S (susceptibles)
-        (1.0 - f) * S,
+        # FA (fact-checkers, active)
+        f * FI + (1.0 - tauinv) * FA,
     ]
-    assert numpy.isclose(numpy.sum(y1), N), "Number of agents changed"
+    y1 = numpy.asfarray(y1)
+    assert numpy.isclose(y1.sum(), N), "Number of agents changed"
     return y1
 
 

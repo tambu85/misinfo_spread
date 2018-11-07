@@ -84,7 +84,7 @@ def _genresidualsfunc(func, data, n_vars, fity0=False, y0base=None,
         # model.
         if aggfunc is not None:
             yhat = aggfunc(yhat)
-        # select observable variables for residials
+        # select observable variables for residuals
         if i_fitvars is not None:
             # user specified column indices
             assert len(i_fitvars) == n_datavars, "Error: must match number "\

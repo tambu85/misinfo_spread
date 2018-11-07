@@ -17,8 +17,7 @@ def compare(nsteps, y0, p):
 
     # ODE model
     yrate = scipy.integrate.odeint(hoaxmodel, y0, t, args=p, rtol=1e-8)
-
-    ylabels = ["BA", "FA", "BI", "FI", "S"]
+    ylabels = ["S", "BI", "BA", "FI", "FA"]
     labels = ['Prob.', 'ODE']
     fig, axs = plt.subplots(nrows=2, ncols=3, figsize=(8, 5), sharex=True)
     for i, (ax, ylabel) in enumerate(zip(numpy.ravel(axs), ylabels)):
@@ -33,12 +32,12 @@ def compare(nsteps, y0, p):
 
     # plot the total number of agents
     plt.sca(axs[1, 2])
+    plt.ylim((0,2))
     plt.plot(t, yprob.sum(axis=1), ls='-', c='gray', label=labels[0],
              alpha=.75)
     plt.plot(t, yrate.sum(axis=1), 'k--', label=labels[1], alpha=.75)
     plt.xlabel('$t$')
     plt.ylabel('S + BI + BA + FI + FA')
-
     plt.tight_layout()
     plt.show()
     return t, yprob, yrate
