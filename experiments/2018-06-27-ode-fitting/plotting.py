@@ -95,35 +95,53 @@ def plotall(df, max_nrows, max_ncols, max_figsize, **kwargs):
 
         # set tight layout
         plt.tight_layout(pad=0.1)
+        plt.show()
 
 
 # TODO:
-# 1. Add legend,
+# 1. Add legend >> Done
 # 2. Split plot in two for fact/fake and remove log scale? Or plot fact-checks
-#    on a second y-axis?
-# 3. Can integrate in plotall so that plotall takes whathever plotting task one
-#    wants?
+#    on a second y-axis? >> Done
+# 3. Can integrate in plotall so that plotall takes whatever plotting task one
+#    wants? >> ???
+
 
 def plotonewithurls(df, k):
     t0 = df.index[0]
     df = df.reset_index(drop=True)
 
     # fig = plt.gcf()
-    ax = plt.gca()
+    # ax = plt.gca()
 
-    df['fake'].plot(legend=False, color='k', ls='--', ax=ax)
-    df['fake'].sum(axis=1).plot(legend=False, color='k', ls='-', ax=ax)
+    fig, (ax1, ax2, ax3) = plt.subplots(1, 3)
+    title = "Story " + str(k) + ": $t_0=$ {}".format(t0)
+    fig.suptitle(title)
 
-    df['fact'].plot(legend=False, color='r', ls='--', ax=ax)
-    df['fact'].sum(axis=1).plot(legend=False, color='r', ls='-', ax=ax)
+    ax1 = plt.subplot(1, 3, 1)
+    df['fake'].plot(legend=False, color='k', ls='--', ax=ax1, title="Fake news")
+    ax1.set_yscale('symlog')
+    ymin, ymax = ax1.get_ylim()
+    ax1.set_ylim(ymin, ymax * 10)
+    ax1.set_xlabel('Hours since $t_0$')
+    ax1.set_ylabel('Active Users')
+    ax2 = plt.subplot(1, 3, 2)
+    df['fact'].plot(legend=False, color='r', ls='--', ax=ax2, title="Fact-check")
+    ax2.set_yscale('symlog')
+    ymin, ymax = ax2.get_ylim()
+    ax2.set_ylim(ymin, ymax * 10)
+    ax2.set_xlabel('Hours since $t_0$')
 
-    ax.set_yscale('symlog')
-    ymin, ymax = ax.get_ylim()
-    ax.set_ylim(ymin, ymax * 10)
-    ax.text(0.5, 0.9, "$t_0=$ {}".format(t0), transform=ax.transAxes,
-            horizontalalignment='center')
+    ax3 = plt.subplot(1, 3, 3)
+    df['fake'].sum(axis=1).plot(legend=False, color='k', ls='-', ax=ax3, label='fake')
+    df['fact'].sum(axis=1).plot(legend=False, color='r', ls='-', ax=ax3, label='fact')
+    ax3.set_title("Total")
+    ax3.set_yscale('symlog')
+    ymin, ymax = ax3.get_ylim()
+    ax3.set_ylim(ymin, ymax * 10)
+    ax3.set_xlabel('Hours since $t_0$')
+    ax3.legend(loc='best')
 
-    ax.set_xlabel('Hours since $t_0$')
-    ax.set_ylabel('Active Users')
-    ax.set_title(str(k))
+    plt.subplots_adjust(top=0.88)
     plt.tight_layout()
+
+    plt.show()
