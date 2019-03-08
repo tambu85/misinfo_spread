@@ -57,10 +57,9 @@ if __name__ == '__main__':
     import models
     N_max = 1e6
 
-    # All initial conditions are unknown parameters to fit
     bounds = [
-            (0, N_max),  # BA
-            (0, N_max),  # FA
+ #           (0, N_max),  # BA
+ #           (0, N_max),  # FA
             (0, N_max),  # BI
             (0, N_max),  # FI
             (0, N_max),  # S
@@ -78,17 +77,20 @@ if __name__ == '__main__':
     data7 = numpy.c_[t, mystory.values]
     #print(data7)
 
-    xopt, err = fitone(data7, models.hoaxmodel, 5, bounds, fity0=True, nrep=1)
+    xopt, err = fitone(data7, models.hoaxmodel, 5, bounds, fity0=False, nrep=1)
     numpy.set_printoptions(precision=2, suppress=True)
     print("{} +/- {}".format(numpy.round(xopt, 2), numpy.round(err, 2)))
 
-    [ba_opt, fa_opt, bi_opt, fi_opt, s_opt, pv_opt, tauinv_opt, alpha_opt]=numpy.round(xopt,2)
-    y0 = (ba_opt, fa_opt, bi_opt, fi_opt, s_opt)
+    fa0,ba0= data7[0][1:]
+    [bi_opt, fi_opt, s_opt, pv_opt, tauinv_opt, alpha_opt]=numpy.round(xopt,2)
+    #[ba_opt, fa_opt, bi_opt, fi_opt, s_opt, pv_opt, tauinv_opt, alpha_opt]=numpy.round(xopt,2)
+    y0 = (fa0, ba0, bi_opt, fi_opt, s_opt)
+    #y0 = (ba_opt, fa_opt, bi_opt, fi_opt, s_opt)
     sigma=0
     fit_data = gendata(models.hoaxmodel, y0, t, sigma, pv_opt, tauinv_opt, alpha_opt)
     fit_data = fit_data[:,1:3]
     fit_df = pandas.DataFrame.from_records(fit_data)
-    fit_df.columns=["ba_fit","fa_fit"]
+    fit_df.columns=["fa_fit","ba_fit"]
     fit_df.index=mystory.index
 
     print(fit_df.head())

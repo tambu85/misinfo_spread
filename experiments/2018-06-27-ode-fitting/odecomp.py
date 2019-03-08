@@ -17,7 +17,7 @@ def compare(nsteps, y0, p):
 
     # ODE model
     yrate = scipy.integrate.odeint(hoaxmodel, y0, t, args=p, rtol=1e-8)
-    ylabels = ["S", "BI", "BA", "FI", "FA"]
+    ylabels = ["BA", "FA", "BI", "FI", "S"]
     labels = ['Prob.', 'ODE']
     fig, axs = plt.subplots(nrows=2, ncols=3, figsize=(8, 5), sharex=True)
     for i, (ax, ylabel) in enumerate(zip(numpy.ravel(axs), ylabels)):
@@ -37,7 +37,7 @@ def compare(nsteps, y0, p):
              alpha=.75)
     plt.plot(t, yrate.sum(axis=1), 'k--', label=labels[1], alpha=.75)
     plt.xlabel('$t$')
-    plt.ylabel('S + BI + BA + FI + FA')
+    plt.ylabel('BA + FA + BI + FI + S')
     plt.tight_layout()
     plt.show()
     return t, yprob, yrate
@@ -51,12 +51,12 @@ if __name__ == '__main__':
     parser.add_argument('pv', type=float)
     parser.add_argument('tauinv', type=float)
     parser.add_argument('alpha', type=float)
-    parser.add_argument('S', type=float)
-    parser.add_argument('BI', type=float)
     parser.add_argument('BA', type=float)
-    parser.add_argument('FI', type=float)
     parser.add_argument('FA', type=float)
+    parser.add_argument('BI', type=float)
+    parser.add_argument('FI', type=float)
+    parser.add_argument('S', type=float)
     args = parser.parse_args()
     p = (args.pv, args.tauinv, args.alpha)
-    y0 = numpy.asfarray([args.S, args.BI, args.BA, args.FI, args.FA])
+    y0 = numpy.asfarray([args.BA, args.FA, args.BI, args.FI, args.S])
     compare(args.nsteps, y0, p)

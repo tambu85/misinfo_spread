@@ -21,7 +21,8 @@ import json
 import os
 import contextlib
 
-# TODO write ODE for the following deterministic models
+# TODO write ODE for the followin
+# g deterministic models
 #  1. The model by Bettencourt et al.
 #  2. The DK model by Daley and Kendall (see review by Vespignani et al.)
 #  3. The MT model by Maki and Thompson
@@ -92,15 +93,15 @@ def hoaxmodel(y, t, pv, tauinv, alpha):
     """
     _checkparams(pv, tauinv, alpha)
     y = numpy.asfarray(y)
-    S, BI, BA, FI, FA = y
+    FA, BA, BI, FI, S = y
     N = y.sum()
     f = BA / N
     dy = [
-        -f * S,  # S
-        alpha * f * S + tauinv * BA - (f + pv) * BI,  # BI
-        f * BI - (tauinv + pv) * BA,  # BA
-        (1.0 - alpha) * f * S + pv * (BI + BA) + tauinv * FA - f * FI,  # FI
         f * FI - tauinv * FA,  # FA
+        f * BI - (tauinv + pv) * BA,  # BA
+        alpha * f * S + tauinv * BA - (f + pv) * BI,  # BI
+        (1.0 - alpha) * f * S + pv * (BI + BA) + tauinv * FA - f * FI,  # FI
+        -f * S,  # S
     ]
     assert numpy.isclose(numpy.sum(dy), 0), "sum(dy) does not cancel out"
     return dy
@@ -167,23 +168,23 @@ def hoaxmodelseg(y, t, pvgu, pvsk, tauinv, alpha, s, gamma):
     """
     _checkparamsseg(pvgu, pvsk, tauinv, alpha, s, gamma)
     y = numpy.asfarray(y)
-    Sgu, Ssk, BIgu, BIsk, BAgu, BAsk, FIgu, FIsk, FAgu, FAsk = y
+    BAgu, BAsk, FAgu, FAsk, BIgu, BIsk,  FIgu, FIsk, Sgu, Ssk, = y
     N = y.sum()
     fgu = s * gamma * BAgu / N + (1 - s) * (1 - gamma) * BAsk / N
     fsk = s * (1 - gamma) * BAgu / N + (1 - s) * gamma * BAsk / N
     dy = [
-        -fgu * Sgu,  # Sgu
-        -fsk * Ssk,  # Ssk
-        alpha * fgu * Sgu + tauinv * BAgu - (fgu + pvgu) * BIgu,  # BIgu
-        alpha * fsk * Ssk + tauinv * BAsk - (fsk + pvsk) * BIsk,  # BIsk
         fgu * BIgu - (tauinv + pvgu) * BAgu,  # BAgu
         fsk * BIsk - (tauinv + pvsk) * BAsk,  # BAsk
+        fgu * FIgu - tauinv * FAgu,  # FAgu
+        fsk * FIsk - tauinv * FAsk,  # FAsk
+        alpha * fgu * Sgu + tauinv * BAgu - (fgu + pvgu) * BIgu,  # BIgu
+        alpha * fsk * Ssk + tauinv * BAsk - (fsk + pvsk) * BIsk,  # BIsk
         (1.0 - alpha) * fgu * Sgu + pvgu * (BIgu + BAgu) + tauinv * FAgu - \
         fgu * FIgu,  # FIgu
         (1.0 - alpha) * fsk * Ssk + pvsk * (BIsk + BAsk) + tauinv * FAsk - \
         fsk * FIsk,  # FIsk
-        fgu * FIgu - tauinv * FAgu,  # FAgu
-        fsk * FIsk - tauinv * FAsk,  # FAsk
+        -fgu * Sgu,  # Sgu
+        -fsk * Ssk,  # Ssk
     ]
     assert numpy.isclose(numpy.sum(dy), 0), "sum(dy) does not cancel out"
     return dy
@@ -314,21 +315,21 @@ def probmodel(y, t, pv, tauinv, alpha):
     """
     _checkparams(pv, tauinv, alpha)
     y = numpy.asfarray(y)
-    S, BI, BA, FI, FA = y
+    FA, BA, BI, FI, S = y
     N = y.sum()
     f = BA / N
     y1 = [
-        # S (susceptibles)
-        (1.0 - f) * S,
-        # BI (believers, inactive)
-        alpha * f * S + tauinv * BA + (1.0 - pv) * (1.0 - f) * BI,
+        # FA (fact-checkers, active)
+        f * FI + (1.0 - tauinv) * FA,
         # BA (believers, active)
         (1.0 - pv) * f * BI + (1.0 - tauinv) * (1.0 - pv) * BA,
+        # BI (believers, inactive)
+        alpha * f * S + tauinv * BA + (1.0 - pv) * (1.0 - f) * BI,
         # FI (fact-checkers, inactive)
         (1.0 - alpha) * f * S + tauinv * FA + pv * BI + pv * (1.0 - tauinv) \
         * BA + (1.0 - f) * FI,
-        # FA (fact-checkers, active)
-        f * FI + (1.0 - tauinv) * FA,
+        # S (susceptibles)
+        (1.0 - f) * S,
     ]
     y1 = numpy.asfarray(y1)
     assert numpy.isclose(y1.sum(), N), "Number of agents changed"

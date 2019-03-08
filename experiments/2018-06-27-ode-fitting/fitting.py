@@ -262,8 +262,7 @@ if __name__ == '__main__':
         (0, 1),  # tauinv
         (0, 1),  # alpha
     ]
-    xopt1, err1 = fitone(data, models.hoaxmodel, 5, bounds, fity0=True,
-                         nrep=1)
+    xopt1, err1 = fitone(data, models.hoaxmodel, 5, bounds, fity0=True, nrep=1)
 
     # Only BI/FI/S are unknown parameters to fit, but no BA/FA
     bounds = [
@@ -274,8 +273,7 @@ if __name__ == '__main__':
         (0, 1),  # tauinv
         (0, 1),  # alpha
     ]
-    xopt2, err2 = fitone(data, models.hoaxmodel, 5, bounds,
-                         nrep=1)
+    xopt2, err2 = fitone(data, models.hoaxmodel, 5, bounds, nrep=1)
 
     numpy.set_printoptions(precision=2, suppress=True)
     print("{} +/- {}".format(numpy.round(xopt1, 2), numpy.round(err1, 2)))
