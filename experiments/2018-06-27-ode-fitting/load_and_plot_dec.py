@@ -23,20 +23,14 @@ store = pandas.HDFStore(hdf_store_path)
 with closing(store):
     data = dict((int(k.split('_')[1]), store[k]) for k in store)
 
-keys=sorted(data.keys())
-#decumulate data
-ddata=data
-for k in keys:
-    ddata[k].iloc[0]=data[k].iloc[0]
-    #print(ddata)
-    for t in range(1,len(data[k])):
-        ddata[k].iloc[t]= data[k].iloc[t] - data[k].iloc[t-1]
+for k in data:
+    data[k] = data[k].diff()
 
 # This will aggregate all the `fake' and `fact' column groups, and will
 # concatenate all the data frames in one single data frame. These are the data
 # that can be used for the fit.
 df = pandas.concat(dict((k, df.sum(axis=1, level=0))
-                        for k, df in ddata.items()), names=['story_id'])
+                        for k, df in data.items()), names=['story_id'])
 
 # This data frame is indexed by the ID of each story. So to get story with ID 7
 # (see spreadsheet) you just use the dataframe
