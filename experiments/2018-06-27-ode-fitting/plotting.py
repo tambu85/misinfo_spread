@@ -58,7 +58,7 @@ def plotall(df, max_nrows, max_ncols, max_figsize, **kwargs):
             ts = df.loc[k]
             t0 = ts.index[0].date()
             ts = ts.reset_index(drop=True)
-            ts.plot(ax=ax, legend=False, **kwargs)
+            ts.plot(ax=ax, color=['r','b'], legend=False, **kwargs)
             ax.set_xlabel('')
             ax.set_title("${}$".format(k))
             ymin, ymax = ax.get_ylim()
@@ -95,6 +95,7 @@ def plotall(df, max_nrows, max_ncols, max_figsize, **kwargs):
 
         # set tight layout
         plt.tight_layout(pad=0.1)
+        #plt.savefig("ALLstories_DEC.pdf")
         plt.show()
 
 
@@ -118,7 +119,7 @@ def plotonewithurls(df, k):
     fig.suptitle(title)
 
     ax1 = plt.subplot(1, 3, 1)
-    df['fake'].plot(legend=False, color='k', ls='--', ax=ax1, title="Fake news")
+    df['fake'].plot(legend=False, color='b', ls='--', ax=ax1, title="Fake news")
     ax1.set_yscale('symlog')
     ymin, ymax = ax1.get_ylim()
     ax1.set_ylim(ymin, ymax * 10)
@@ -131,15 +132,28 @@ def plotonewithurls(df, k):
     ax2.set_ylim(ymin, ymax * 10)
     ax2.set_xlabel('Hours since $t_0$')
 
+    # ax3 = plt.subplot(1, 3, 3)
+    # df['fake'].sum(axis=1).plot(legend=False, color='b', ls='-', ax=ax3, label='fake')
+    # df['fact'].sum(axis=1).plot(legend=False, color='r', ls='-', ax=ax3, label='fact')
+    # ax3.set_title("Total")
+    # ax3.set_yscale('symlog')
+    # ymin, ymax = ax3.get_ylim()
+    # ax3.set_ylim(ymin, ymax * 10)
+    # ax3.set_xlabel('Hours since $t_0$')
+    # ax3.legend(loc='best')
+
     ax3 = plt.subplot(1, 3, 3)
-    df['fake'].sum(axis=1).plot(legend=False, color='k', ls='-', ax=ax3, label='fake')
-    df['fact'].sum(axis=1).plot(legend=False, color='r', ls='-', ax=ax3, label='fact')
+    df['fake'].sum(axis=1).plot(legend=False, color='b', ls='-', ax=ax3, label='fake')
+    ax3.set_ylabel('Fake Sharing', color='b')
     ax3.set_title("Total")
     ax3.set_yscale('symlog')
     ymin, ymax = ax3.get_ylim()
     ax3.set_ylim(ymin, ymax * 10)
     ax3.set_xlabel('Hours since $t_0$')
-    ax3.legend(loc='best')
+    ax4=ax3.twinx()
+    df['fact'].sum(axis=1).plot(legend=False, color='r', ls='-', ax=ax4, label='fact')
+    ax4.set_ylabel('Fact Sharing', color='r')
+    ax4.tick_params('y',colors='r')
 
     plt.subplots_adjust(top=0.88)
     plt.tight_layout()
