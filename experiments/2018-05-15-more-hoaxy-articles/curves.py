@@ -16,6 +16,7 @@ import pandas
 import math
 import numpy
 import json
+import datetime
 from itertools import count
 from collections import defaultdict
 
@@ -41,18 +42,26 @@ parser.add_argument('--min-degree', type=float, default=1.0,
                     dest='mindeg', help='Plateau found growth angle'
                     'below %(metavar)s (default: %(default).1f deg)',
                     metavar='DEG')
+parser.add_argument('--max-lag', type=float, default=168.0, help='Keep only'
+                    ' stories where fact curve lags fake curve by no more'
+                    ' than %(metavar)s. (default: %(default).1f h)',
+                    metavar='LAG')
 
 
-def filterstories(df, min_tweets_total=1000, min_tweets_each=100):
+# XXX need to make sure that filter here is made in the same way as Marcella
+# script that generated ECDF plots
+def filterstories(df, min_tweets_total=1000, min_tweets_each=100, max_lag=168):
     """
     Filter stories from original data to have only
 
     1. At least a certain number of tweets for each story
     2. Both `fact` and `fake` types have tweets
     3. The `fact` curve lags the `fake` curve, not viceversa
+    4. The lag betweet `fact` and `fake` is not larger than `max_lag` hours.
 
     Finally, reassign story_id to remove gaps.
     """
+    max_lag = datetime.timedelta(hours=max_lag)
     df = df.groupby('story_id').filter(lambda k: len(k) >= min_tweets_total)
 
     n_tweets = df.groupby(['story_id', 'tweet_type']).count()['tweet_id']
@@ -63,7 +72,8 @@ def filterstories(df, min_tweets_total=1000, min_tweets_each=100):
 
     tmin_df = df.groupby(['story_id', 'tweet_type']).agg({'created_at': 'min'})
     tmin_df = tmin_df.unstack()['created_at']
-    idx = tmin_df['fact'] > tmin_df['fake']
+    tmin_df['lag'] = tmin_df['fact'] - tmin_df['fake']
+    idx = (tmin_df['fact'] > tmin_df['fake']) & (tmin_df['lag'] <= max_lag)
     df = df.set_index('story_id').loc[idx].reset_index()
 
     # make sure return value has sorted index
@@ -168,7 +178,7 @@ def iterstories(df, freq='H', trim=True, mindeg=1.0):
 
 
 def createstore(input, output, freq, trim, mindeg, min_tweets_total,
-                min_tweets_each, **kwargs):
+                min_tweets_each, max_lag, **kwargs):
     """
     This is the main function of the script. It takes all the arguments defined
     by the ArgumentParse and creates a new HDFStore holding the processed data.
@@ -180,7 +190,7 @@ def createstore(input, output, freq, trim, mindeg, min_tweets_total,
     Note: additional keyword arguments are ignored.
     """
     df = pandas.read_csv(input, parse_dates=['created_at'])
-    df = filterstories(df, min_tweets_total, min_tweets_each)
+    df = filterstories(df, min_tweets_total, min_tweets_each, max_lag)
     n_stories = len(df['story_id'].unique())
     key_digits = int(math.ceil(math.log10(n_stories)))
     key_template = 'story_{{:0{:d}d}}'.format(key_digits)
@@ -219,7 +229,7 @@ def createstore(input, output, freq, trim, mindeg, min_tweets_total,
 def _main():
     """
     This is the entry point of the script when it is called from the command
-    line.It will read arguments from command line and run the actual "main"
+    line. It will read arguments from command line and run the actual "main"
     function, and will return whatever it returns.
     """
     args = parser.parse_args()
