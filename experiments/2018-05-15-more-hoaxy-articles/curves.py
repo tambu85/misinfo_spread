@@ -14,14 +14,13 @@ import sys
 import argparse
 import pandas
 import math
-import numpy
+# import numpy
 import json
 import datetime
 from itertools import count
 from collections import defaultdict
 
-__all__ = ["parser", "filterstories", "createstore", "findplateau",
-           "iterstories"]
+__all__ = ["parser", "filterstories", "createstore", "iterstories"]
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('input', help='CSV input file')
@@ -36,12 +35,6 @@ parser.add_argument('--min-tweets-each', type=int, default=100,
 parser.add_argument('--min-tweets-total', type=int, default=1000,
                     help='Filter story with at least %(metavar)s '
                     'tweets (default: %(default)d)', metavar='NUM')
-parser.add_argument('--keep-plateau', action='store_false', dest='trim',
-                    help='Do not remove trailing plateau (default: False)')
-parser.add_argument('--min-degree', type=float, default=1.0,
-                    dest='mindeg', help='Plateau found growth angle'
-                    'below %(metavar)s (default: %(default).1f deg)',
-                    metavar='DEG')
 parser.add_argument('--max-lag', type=float, default=168.0, help='Keep only'
                     ' stories where fact curve lags fake curve by no more'
                     ' than %(metavar)s. (default: %(default).1f h)',
@@ -54,34 +47,54 @@ def filterstories(df, min_tweets_total=1000, min_tweets_each=100, max_lag=168):
     """
     Filter stories from original data to have only
 
-    1. At least a certain number of tweets for each story
-    2. Both `fact` and `fake` types have tweets
-    3. The `fact` curve lags the `fake` curve, not viceversa
-    4. The lag betweet `fact` and `fake` is not larger than `max_lag` hours.
+    1. The `fact` curve lags the `fake` curve, not viceversa;
+    2. The lag betweet `fact` and `fake` is not larger than `max_lag` hours;
+    3. At least a certain number of tweets for each story;
+    4. At least a certain number of tweets in each curve for each story.
 
     Finally, reassign story_id to remove gaps.
     """
     max_lag = datetime.timedelta(hours=max_lag)
-    df = df.groupby('story_id').filter(lambda k: len(k) >= min_tweets_total)
 
-    n_tweets = df.groupby(['story_id', 'tweet_type']).count()['tweet_id']
-    n_tweets = n_tweets.unstack().fillna(0)
-    idx = (n_tweets['fact'] > min_tweets_each) & \
-        (n_tweets['fake'] > min_tweets_each)
-    df = df.set_index('story_id').loc[idx].reset_index()
+    # For each URL we find the first tweet with that URL (based on timestamp).
+    cols = ['created_at', 'story_id', 'tweet_type']
+    first_df = df.groupby('clean_url').min()[cols].reset_index()
 
-    tmin_df = df.groupby(['story_id', 'tweet_type']).agg({'created_at': 'min'})
-    tmin_df = tmin_df.unstack()['created_at']
-    tmin_df['lag'] = tmin_df['fact'] - tmin_df['fake']
-    idx = (tmin_df['fact'] > tmin_df['fake']) & (tmin_df['lag'] <= max_lag)
-    df = df.set_index('story_id').loc[idx].reset_index()
+    # Then, since there could be multiple URLs for each story, for each each
+    # story and for each type of tweet (fake/fact), we select the earliest URL.
+    first_df = first_df.groupby(['story_id', 'tweet_type']).first().unstack()
 
-    # make sure return value has sorted index
+    # Now we select only the rows where the lag between fact and fake is
+    # positive and less than the max lag (default: 186h)
+    df_ts = pandas.DataFrame(first_df['created_at'])
+    df_ts['lag'] = df_ts['fact'] - df_ts['fake']
+    idx = (df_ts['fact'] >= df_ts['fake']) & (df_ts['lag'] <= max_lag)
+
+    # We select the URLs that correspond to those stories, and filter
+    # the original data frame to include only rows for those URLs.
+    df_urls = pandas.DataFrame(first_df['clean_url'])
+    df_urls = df_urls[idx]
+    filtered_urls = set(df_urls['fact']).union(df_urls['fake'])  # noqa: W0612
+    df = df.query('clean_url in @filtered_urls')
+
+    # Next we compute total number of tweets for each story and for each type
+    # of tweet, and filter stories with a min amount of tweets for each type
+    # and overall.
+    tot_df = df.groupby(['story_id', 'tweet_type']).count()['clean_url']
+    tot_df = tot_df.unstack()
+    tot_df['total'] = tot_df['fake'] + tot_df['fact']
+    tot_df = tot_df.query('fake > @min_tweets_each & '
+                          'fact > @min_tweets_each & '
+                          'total > @min_tweets_total')
+    idx = set(tot_df.index)
+    df = df.query('story_id in @idx')
+
+    # Finally, we sort the data frame according to story_id
     df = df.set_index('story_id').sort_index().reset_index()
     return df
 
 
-def _activeusers(df, freq='H'):
+def _activeusers(df, freq='H', max_lag=None):
     """
     This function is used to create the time series of active users for
     each individual URL.
@@ -97,79 +110,20 @@ def _activeusers(df, freq='H'):
     return df.cumsum()
 
 
-def findplateau(y, x=None, mindeg=1.0):
-    """
-    Find the value at which a curve reaches its plateau. A plateau is
-    reached when the angle tangent to the curve at any given point is
-    below a small threshold (default, 1 degree).
-
-    Parameters
-    ==========
-    y : ndarray
-        An array of monotonically increasing values
-
-    x : ndarray, optional
-        x coordinates. By default will use ordinal indexes
-
-    mindeg : float
-        Below this threshold there is a plateau
-
-    Returns
-    =======
-    ixplateau : int
-        Index of the beginning of the plateau
-    """
-    y = numpy.ravel(y)
-    assert numpy.all(numpy.diff(y) >= 0), \
-        "y values are not monotonically increasing"
-    assert 0.0 <= mindeg <= 90.0, \
-        "mindeg must be between 0 and 90 degrees"
-    if x is None:
-        x = numpy.arange(len(y))
-    else:
-        x = numpy.ravel(x)
-        assert numpy.all(numpy.diff(x) >= 0), \
-            "x values are not monotonically increasing"
-        x = x[-1] - x[0]
-    y = y[-1] - y
-    z = numpy.sqrt(x ** 2 + y ** 2)
-    rad = numpy.arcsin(y / z)
-    deg = rad * 180 / numpy.pi
-    # argmax returns the index of the first occurrence of True (the max
-    # in a boolean array)
-    return numpy.argmax(deg < mindeg)
-
-
-def _trimplateau(ts, mindeg):
-    """
-    Utility function. Use `timeseries` directly if you want to find the
-    longest plateau for a set of curves in the same story.
-    """
-    y = ts.values.copy()
-    x = ts.index.get_level_values(-1).ravel().astype('M8[h]').astype('int')
-    return findplateau(y, x=x, mindeg=mindeg)
-
-
-def iterstories(df, freq='H', trim=True, mindeg=1.0):
+def iterstories(df, freq='H', max_lag=None):
     """
     This functions returns an iterator over data frames, one for each story.
-    Each data frame has two groups of columns, a 'fake' and a 'fact' one. In
-    each group there is a column for each cleaned URL in the story.
+    Each data frame has two columns, a 'fake' and a 'fact' one.
     """
-    df = df.groupby('story_id').apply(_activeusers, freq)
+    df = df.groupby('story_id').apply(_activeusers, freq, max_lag)
     grouper = df.groupby(level=0)
     for story_id, subdf in grouper:
         subdf = subdf.unstack(level=[1, 2])['active_users']
         subdf = subdf.loc[story_id].fillna(method='ffill').fillna(0)
-        if trim:
-            # compute plateau for each individual curve; pick the longest and
-            # trim all series to the same length
-            imax = subdf.apply(_trimplateau, axis=0, args=(mindeg,)).max()
-            subdf = subdf.iloc[:imax]
-            subdf = subdf.ffill()
         if not subdf.empty:
-            # adjust column multi-index and remove those fastidious used in the
-            # SQL query to match tweets from Hoaxy
+            # adjust column multi-index and remove from URLs any occurrence of
+            # the '%' character. It had been used in the SQL query to match
+            # tweets from Hoaxy, but now it is not necessary anymore.
             idx = pandas.MultiIndex.from_tuples(list(subdf.columns))
             subdf.columns = idx   # resets column index
             subdf.rename(columns=lambda k: k.replace('%', ''), inplace=True)
@@ -177,7 +131,7 @@ def iterstories(df, freq='H', trim=True, mindeg=1.0):
             yield story_id, subdf
 
 
-def createstore(input, output, freq, trim, mindeg, min_tweets_total,
+def createstore(input, output, freq, min_tweets_total,
                 min_tweets_each, max_lag, **kwargs):
     """
     This is the main function of the script. It takes all the arguments defined
@@ -194,7 +148,7 @@ def createstore(input, output, freq, trim, mindeg, min_tweets_total,
     n_stories = len(df['story_id'].unique())
     key_digits = int(math.ceil(math.log10(n_stories)))
     key_template = 'story_{{:0{:d}d}}'.format(key_digits)
-    iterator = iterstories(df, freq=freq, trim=trim, mindeg=mindeg)
+    iterator = iterstories(df, freq=freq, max_lag=max_lag)
     store = pandas.HDFStore(output, 'w')
     urls = {}
     with store:
