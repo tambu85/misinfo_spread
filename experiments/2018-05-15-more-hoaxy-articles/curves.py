@@ -3,10 +3,6 @@
 """ Create curves for data fitting. Requires Pandas 0.18+ for new resampling
 interface. """
 
-# TODO:
-# 2. Report info on discarded stories.
-
-
 from __future__ import print_function
 
 import os
@@ -36,8 +32,6 @@ parser.add_argument('--max-lag', type=int, default=168, help='Keep only'
                     metavar='LAG')
 
 
-# XXX need to make sure that filter here is made in the same way as Marcella
-# script that generated ECDF plots
 def filterstories(df, min_tweets_total=1000, min_tweets_each=100, max_lag=168):
     """
     Filter stories from original data to have only
