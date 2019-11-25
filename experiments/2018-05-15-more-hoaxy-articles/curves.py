@@ -145,10 +145,10 @@ def createdata(input, output, freq, min_tweets_total, min_tweets_each,
     df1 = df.groupby(['story_id', 'tweet_type']).apply(_resample,
                                                        max_lag, freq)
     df1.index.rename('timestamp', level=-1, inplace=True)
-    print(df1.head())
     df2 = df1.groupby('story_id').apply(_align, max_lag)
     df2.reset_index(inplace=True)
     df2.to_csv(output, index=False)
+    print("Data written to {}.".format(output))
 
     # serialize full URLs to JSON
     output_fname, _ = os.path.splitext(output)
