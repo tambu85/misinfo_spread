@@ -107,6 +107,11 @@ def filterstories(df, min_tweets_total=1000, min_tweets_each=100, max_lag=168):
 
 
 def _resample(df, lag, freq):
+    """
+    Compute curves to fit. Data are number of unique users tweet at hourly
+    frequency. (This is taken to represent the number of "active"
+    believers/fact-checkers at time t.)
+    """
     df.set_index('created_at', inplace=True)
     df = df.resample('h').agg({'user_id': 'nunique'})
     t0 = df.index[0]
@@ -116,6 +121,10 @@ def _resample(df, lag, freq):
 
 
 def _align(df, lag):
+    """
+    For each story, create a single data frame by aligning the 'fact' curve to
+    the 'fake' curve.
+    """
     story_id = df.index.get_level_values(0)[0]
     a = df.loc[story_id, 'fake']
     b = df.loc[story_id, 'fact']
@@ -131,11 +140,7 @@ def createdata(input, output, freq, min_tweets_total, min_tweets_each,
                max_lag, **kwargs):
     """
     This is the main function of the script. It takes all the arguments defined
-    by the ArgumentParse and creates a new HDFStore holding the processed data.
-
-    Data will be stored in an HDF5 file, each data frame has its own key
-      /story_XX
-    where XX is the ID of the story (01, 02, etc.).
+    by the ArgumentParse and create the data files.
 
     Note: additional keyword arguments are ignored.
     """
