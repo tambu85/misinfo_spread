@@ -77,7 +77,7 @@ def filterstories(df, min_tweets_total=1000, min_tweets_each=100, max_lag=168):
     df_ts['lag'] = df_ts['fact'] - df_ts['fake']
 
     # We can now select only the stories where the lag between fact and fake is
-    # positive and less than the max lag (default: 186h). We put this info into
+    # positive and less than the max lag (default: 168h). We put this info into
     # a boolean frame that can be used as an index.
     idx = (df_ts['fact'] >= df_ts['fake']) & (df_ts['lag'] <= max_lag)
 
@@ -113,7 +113,8 @@ def _resample(df, lag, freq):
     believers/fact-checkers at time t.)
     """
     df.set_index('created_at', inplace=True)
-    df = df.resample('h').agg({'user_id': 'nunique'})
+    df = df.resample('h').agg({'tweet_id': 'count'})
+    df = df.rename(columns={'tweet_id': 'active_users'})
     t0 = df.index[0]
     idx = pandas.date_range(start=t0, periods=lag, freq=freq)
     df = df.reindex(idx)
@@ -129,8 +130,8 @@ def _align(df, lag):
     a = df.loc[story_id, 'fake']
     b = df.loc[story_id, 'fact']
     a, b = a.align(b)
-    df = pandas.DataFrame({'fake': list(a['user_id'][:lag]),
-                           'fact': list(b['user_id'][:lag])},
+    df = pandas.DataFrame({'fake': list(a['active_users'][:lag]),
+                           'fact': list(b['active_users'][:lag])},
                           index=a[:lag].index)
     df.fillna(0, inplace=True)
     return df
