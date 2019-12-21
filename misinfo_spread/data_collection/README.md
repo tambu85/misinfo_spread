@@ -16,6 +16,13 @@ Instructions
 
 4. Export spreadsheet to CSV format to `csv/matching_export_of_merge_sheet.csv`.
 
-5. Run SQL query `sql/match_tweets.sql` on Hoaxy database. This will fetch all tweets from either the fact-checking or "fake news" articles.
+5. Run SQL query `sql/match_tweets.sql` on Hoaxy database. This will fetch all tweets from either the fact-checking or "fake news" articles:
+
+```shell
+    # Create SSH tunnel to your database. In this case need to tunnel through intermediate host (smithers)
+    ssh -fNL 5433:recall.ils.indiana.edu:5433 smithers
+    # Run SQL query
+    psql -q -h localhost -p 5433 -d hoaxy -U gciampag < match_tweets.sql  | pigz -fc > ../data_cleaning/match_tweets.csv.gz
+```
 
 6. The tweets need to be pre-processed and filtered. See `data_cleaning/README.md` for instructions.
