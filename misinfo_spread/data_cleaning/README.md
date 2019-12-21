@@ -7,16 +7,16 @@ Instructions
 
 3. Now you can generate the "fake" and "fact" curves for fitting. To do so, run `curves.py`. The script can perform some filtering to remove stories with few tweets. The data in the paper were generated with the following parameters:
 
-``sh
+```sh
 
 python curves.py -f h --min-tweets-each 100 --min-tweets-total 1000 ./match_tweets.csv.gz data_tweets.csv
-``
+```
 
 4. You should have now two files: one called `data_tweets.csv` (the actual data) and another called `data_tweets_urls.csv`, which lists the URLs selected for the "fake" and "fact" curve, respectively.
 
 5. You can plot all the data using the script `plotall.py`:
 
-``sh
+```sh
 
 python plotall.py data_tweets.csv
 ```
