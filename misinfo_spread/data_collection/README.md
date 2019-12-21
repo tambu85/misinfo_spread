@@ -1,7 +1,7 @@
 Instructions
 ============
 
-1. Run SQL query to xport the 100 most tweeted articles collected by Hoaxy:
+1. Run SQL query [sql/top_claim_articles.sql](sql/top_claim_articles.sql) to xport the 100 most tweeted articles collected by Hoaxy:
 
 ```bash
     # Create SSH tunnel to your database. In this case need to tunnel through intermediate host (smithers)
@@ -16,7 +16,7 @@ Instructions
 
 4. Export spreadsheet to CSV format to `csv/matching_export_of_merge_sheet.csv`.
 
-5. Run SQL query `sql/match_tweets.sql` on Hoaxy database. This will fetch all tweets from either the fact-checking or "fake news" articles:
+5. Run SQL query [sql/match_tweets.sql](sql/match_tweets.sql) on Hoaxy database. This will fetch all tweets from either the fact-checking or "fake news" articles:
 
 ```shell
     # Create SSH tunnel to your database. In this case need to tunnel through intermediate host (smithers)
@@ -25,4 +25,4 @@ Instructions
     psql -q -h localhost -p 5433 -d hoaxy -U gciampag < match_tweets.sql  | pigz -fc > ../data_cleaning/match_tweets.csv.gz
 ```
 
-6. The tweets need to be pre-processed and filtered. See `data_cleaning/README.md` for instructions.
+6. The tweets need to be pre-processed and filtered. This is done in the `data_cleaning` folder. See its own [README](../data_cleaning/README.md) for instructions.
