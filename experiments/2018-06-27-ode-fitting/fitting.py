@@ -1,4 +1,4 @@
-""" Fitting script """
+""" Fitting functions """
 
 from __future__ import print_function
 
@@ -6,24 +6,9 @@ import numpy
 import scipy.stats
 import scipy.integrate
 import scipy.optimize
-# import argparse
 
 # TODO perhaps remove y0base? Since x_scale seems to work fine.
 # TODO compute Chi square
-
-
-def gendata(model, y0, t, sigma=0, *args):
-    """
-    model - ODE
-    y0 - initial conditions
-    t - time points
-    sigma - variance of gaussian noise term
-    obsvars - return only these variables (list of column indices)
-    args - ODE model parameters
-    """
-    y = scipy.integrate.odeint(model, y0, t, args=args)
-    yerr = scipy.stats.norm.rvs(scale=sigma, size=y.shape)
-    return numpy.c_[t, y + yerr]
 
 
 def _genresidualsfunc(func, data, n_vars, fity0=False, y0base=None,
@@ -236,45 +221,3 @@ def fitmany(datasets, modelfunc, n_vars, bounds, nrep=25, fity0=False,
                      y0base=y0base, aggfunc=aggfunc, **kwargs)
         tmp.append(res)
     return tmp
-
-
-if __name__ == '__main__':
-    import models
-    pv = 0.1
-    tauinv = 0.1
-    alpha = 0.5
-    t = numpy.linspace(0, 10, 11)
-    sigma = 2
-    y0 = (1000, 0, 0, 0, 9000)
-    data = gendata(models.hoaxmodel, y0, t, sigma, pv, tauinv, alpha)
-    data = data[:, :3]
-
-    N_max = 1e6
-
-    # All initial conditions are unknown parameters to fit
-    bounds = [
-        (0, N_max),  # BA
-        (0, N_max),  # FA
-        (0, N_max),  # BI
-        (0, N_max),  # FI
-        (0, N_max),  # S
-        (0, 1),  # pv
-        (0, 1),  # tauinv
-        (0, 1),  # alpha
-    ]
-    xopt1, err1 = fitone(data, models.hoaxmodel, 5, bounds, fity0=True, nrep=1)
-
-    # Only BI/FI/S are unknown parameters to fit, but no BA/FA
-    bounds = [
-        (0, N_max),  # BI
-        (0, N_max),  # FI
-        (0, N_max),  # S
-        (0, 1),  # pv
-        (0, 1),  # tauinv
-        (0, 1),  # alpha
-    ]
-    xopt2, err2 = fitone(data, models.hoaxmodel, 5, bounds, nrep=1)
-
-    numpy.set_printoptions(precision=2, suppress=True)
-    print("{} +/- {}".format(numpy.round(xopt1, 2), numpy.round(err1, 2)))
-    print("{} +/- {}".format(numpy.round(xopt2, 2), numpy.round(err2, 2)))
