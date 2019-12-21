@@ -7,7 +7,7 @@ Instructions
 
 3. Now you can generate the "fake" and "fact" curves for fitting. To do so, run `curves.py`. The script can perform some filtering to remove stories with few tweets. The data in the paper were generated with the following parameters:
 
-``shell
+``sh
 
 python curves.py -f h --min-tweets-each 100 --min-tweets-total 1000 ./match_tweets.csv.gz data_tweets.csv
 ``
@@ -16,7 +16,7 @@ python curves.py -f h --min-tweets-each 100 --min-tweets-total 1000 ./match_twee
 
 5. You can plot all the data using the script `plotall.py`:
 
-``shell
+``sh
 
 python plotall.py data_tweets.csv
 ```
