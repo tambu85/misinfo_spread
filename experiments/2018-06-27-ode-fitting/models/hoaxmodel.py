@@ -2,11 +2,11 @@
 
 import numpy
 
-from models.base import BaseModel, Variable
+from models.base import ODEModel, Variable
 
 __all__ = ['HoaxModel']
 
-class HoaxModel(BaseModel):
+class HoaxModel(ODEModel):
     """
     Hoax Model by Tambuscio et al. This is the model without segregation.
 
@@ -35,7 +35,7 @@ class HoaxModel(BaseModel):
     =====
     The model is expressed as a system of ordinary differential equations.
     Returns y'(t), the derivative at y(t). Can be simulated using numerical
-    integration (see `scipy.integrate.odeint`).
+    integration (see `models.base.ODEModel`).
 
     """
     _theta = ['pv', 'tauinv', 'alpha']
@@ -66,7 +66,6 @@ class HoaxModel(BaseModel):
         return y[:, :2]
 
     def dy(self, y, t):
-        # this assigns and checks that each variable is within its bounds
         self.y = numpy.asfarray(y)
         f = self.BA / self.y.sum()
         dy = [

@@ -2,7 +2,8 @@ import weakref
 import numpy
 import scipy.integrate
 
-__all__ = ['Variable', 'BaseModel']
+__all__ = ['Variable', 'ODEModel']
+
 
 class Variable(object):
     """ Descriptor for numerical variables with optional bounds. """
@@ -49,7 +50,7 @@ class Variable(object):
                 raise ValueError("Illegal value > upper: {}".format(value))
 
 
-class BaseModel(object):
+class ODEModel(object):
     """
     Base class for all models.
 
@@ -74,7 +75,7 @@ class BaseModel(object):
     _y = []
 
     def __init__(self):
-        super(BaseModel, self).__init__()
+        super(ODEModel, self).__init__()
         self._do_agg = hasattr(self, "obs")
 
     def gettheta(self):
@@ -105,6 +106,7 @@ class BaseModel(object):
         """
         raise NotImplementedError()
 
+    # XXX perhaps could be used for residuals instead of dy?
     def __call__(self, y, t, *args, **kwargs):
         dy = self.dy(y, t)
         assert numpy.isclose(numpy.sum(dy), 0), "sum(dy) does not cancel out"
