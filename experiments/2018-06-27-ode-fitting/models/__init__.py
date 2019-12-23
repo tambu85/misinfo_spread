@@ -25,14 +25,8 @@ Contents
 #  5. The "Higgs rumor" model by De Domenico et al. (2013).
 #  6. The "unified" spreading model by Ferraz de Arruda et al. (2016)
 
-import hoaxmodel
-import seghoaxmodel
-import sir
-import seiz
-
-from hoaxmodel import *  # noqa
-from seghoaxmodel import *  # noqa
-from sir import *  # noqa
-from seiz import *  # noqa
-
-__all__ = hoaxmodel.__all__ + seghoaxmodel.__all__ + sir.__all__ + seiz.__all__
+from models.base import *
+from models.hoaxmodel import *
+from models.seghoaxmodel import *
+from models.sir import *
+from models.seiz import *

@@ -2,14 +2,11 @@
 
 import numpy
 
+from models.base import BaseModel, Variable
 
-def _checkparams(pv, tauinv, alpha):
-    assert 0 <= pv <= 1, "pv: out of bounds: {}".format(pv)
-    assert 0 <= alpha <= 1, "alpha: out of bounds: {}".format(alpha)
-    assert 0 <= tauinv <= 1, "tauinv: out of bounds: {}".format(tauinv)
+__all__ = ['HoaxModel']
 
-
-def hoaxmodel(y, t, pv, tauinv, alpha):
+class HoaxModel(BaseModel):
     """
     Hoax Model by Tambuscio et al. This is the model without segregation.
 
@@ -41,17 +38,43 @@ def hoaxmodel(y, t, pv, tauinv, alpha):
     integration (see `scipy.integrate.odeint`).
 
     """
-    _checkparams(pv, tauinv, alpha)
-    y = numpy.asfarray(y)
-    FA, BA, BI, FI, S = y
-    N = y.sum()
-    f = BA / N
-    dy = [
-        f * FI - tauinv * FA,  # FA
-        f * BI - (tauinv + pv) * BA,  # BA
-        alpha * f * S + tauinv * BA - (f + pv) * BI,  # BI
-        (1.0 - alpha) * f * S + pv * (BI + BA) + tauinv * FA - f * FI,  # FI
-        -f * S,  # S
-    ]
-    assert numpy.isclose(numpy.sum(dy), 0), "sum(dy) does not cancel out"
-    return dy
+    _theta = ['pv', 'tauinv', 'alpha']
+
+    pv = Variable(lower=0, upper=1)
+    tauinv = Variable(lower=0, upper=1)
+    alpha = Variable(lower=0, upper=1)
+
+    _y = ['BA', 'FA', 'BI', 'FI', 'S']
+
+    BA = Variable(lower=0)
+    FA = Variable(lower=0)
+    BI = Variable(lower=0)
+    FI = Variable(lower=0)
+    S = Variable(lower=0)
+
+    def __init__(self, pv, tauinv, alpha):
+        super(HoaxModel, self).__init__()
+        self.pv = pv
+        self.tauinv = tauinv
+        self.alpha = alpha
+
+    @staticmethod
+    def obs(y):
+        """
+        Returns BA and FA
+        """
+        return y[:, :2]
+
+    def dy(self, y, t):
+        # this assigns and checks that each variable is within its bounds
+        self.y = numpy.asfarray(y)
+        f = self.BA / self.y.sum()
+        dy = [
+            f * self.BI - (self.tauinv + self.pv) * self.BA,  # dBA
+            f * self.FI - self.tauinv * self.FA,  # dFA
+            self.alpha * f * self.S + self.tauinv * self.BA - (f + self.pv) * self.BI,  # dBI
+            (1.0 - self.alpha) * f * self.S + self.pv * (self.BI + self.BA) + \
+                self.tauinv * self.FA - f * self.FI,  # dFI
+            -f * self.S,  # dS
+        ]
+        return dy
