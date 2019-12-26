@@ -1,7 +1,10 @@
 import copy
 import weakref
 import numpy
+import scipy.stats
 import scipy.integrate
+
+from utils import stderr
 
 __all__ = ['Variable', 'ODEModel']
 
@@ -162,10 +165,11 @@ class ODEModel(object):
         """
         raise NotImplementedError()
 
-    # XXX perhaps could be used for residuals instead of dy?
     def __call__(self, y, t, *args, **kwargs):
         dy = self.dy(y, t)
-        assert numpy.isclose(numpy.sum(dy), 0), "sum(dy) does not cancel out"
+        z = numpy.sum(dy)
+        assert numpy.isclose(z, 0, atol=1e5), \
+            "sum(dy) does not cancel out: {}".format(z)
         return dy
 
     def simulate(self, y=None, times=None, **kwargs):
@@ -199,6 +203,20 @@ class ODEModel(object):
         else:
             return y
 
+    def getbounds(self):
+        C = self.__class__
+        var_names = self._theta + self._y
+        tmp = []
+        for name in var_names:
+            try:
+                getattr(self, name)
+            except AttributeError:
+                v = C.__dict__[name]
+                lower = v.lower if v.lower is not None else -numpy.inf
+                upper = v.upper if v.upper is not None else +numpy.inf
+                tmp.append((lower, upper))
+        return tmp
+
     def residuals(self, x):
         """
         x is a vector of values for unknown variables of the model. It may
@@ -225,5 +243,66 @@ class ODEModel(object):
         yarr = obj.simulate()
         return (yarr - self.data).ravel()
 
-    def fit(self, data):
-        pass
+    def fit(self, data, times=None, x0=None, nrep=10, **kwargs):
+        """
+        Fit this model to empirical data with least squares.
+
+        Parameters
+        ==========
+
+        data : ndarray
+            The empirical data to fit. This is an (M, N) array where M is the
+            number of time steps and N the number of "observable" variables.
+
+        times : ndarray
+            An optional (M,) array of time points. Will be used for
+            integration of the model. If not passed, it is equal to [0, ...,
+            M-1].
+
+        x0 : ndarray
+            An optional (N, 1) array of initial guesses for unknowns of the
+            fit. If not passed, this is drawn uniformly at random.
+
+        nrep : int
+            Repeat the fitting multiple times and return the solution with
+            minimum cost.
+
+        Returns
+        =======
+        xopt : ndarray
+            An (M,) ndarray of fit estimates.
+
+        xerr : ndarray
+            An (M,) ndarray of standard errors of the fit.
+
+        Notes
+        =====
+        Additional keyword arguments are passed to the least squares routine.
+        By default, the trf method is used, with bounds and x_scale
+        automatically inferred from the model variables. See
+        `scipy.optimize.least_squares` for more information.
+        """
+        bounds = self.getbounds()
+        lower_bounds, upper_bounds = zip(*bounds)
+        self.data = data
+        # default times
+        if times is None:
+            times = numpy.arange(len(data))
+        self.times = times
+        # draw x0 at random from bounds.
+        if x0 is None:
+            size = (nrep, len(bounds))
+            x0seq = scipy.stats.uniform.rvs(lower_bounds, upper_bounds, size)
+        else:
+            x0seq = (x0 for i in range(nrep))
+        x_scale = numpy.diff(bounds, axis=1).ravel()
+        tmp = []
+        for _x0 in x0seq:
+            res = scipy.optimize.least_squares(self.residuals, _x0,
+                                               x_scale=x_scale,
+                                               bounds=(lower_bounds,
+                                                       upper_bounds),
+                                               **kwargs)
+            tmp.append(res)
+        best_res = min(tmp, key=lambda k: k.cost)
+        return best_res.x, stderr(best_res)
