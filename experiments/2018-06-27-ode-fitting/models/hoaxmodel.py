@@ -6,6 +6,9 @@ from models.base import ODEModel, Variable
 
 __all__ = ['HoaxModel']
 
+N_MAX = 1e9  #  upper bound for all initial conditions. This is bigger than the
+             #  total number of daily active users of Twitter.
+
 class HoaxModel(ODEModel):
     """
     Hoax Model by Tambuscio et al. This is the model without segregation.
@@ -53,11 +56,11 @@ class HoaxModel(ODEModel):
 
     _y = ['BA', 'FA', 'BI', 'FI', 'S']
 
-    BA = Variable(lower=0)
-    FA = Variable(lower=0)
-    BI = Variable(lower=0)
-    FI = Variable(lower=0)
-    S = Variable(lower=0)
+    BA = Variable(lower=0, upper=N_MAX)
+    FA = Variable(lower=0, upper=N_MAX)
+    BI = Variable(lower=0, upper=N_MAX)
+    FI = Variable(lower=0, upper=N_MAX)
+    S = Variable(lower=0, upper=N_MAX)
 
     @staticmethod
     def obs(y):
