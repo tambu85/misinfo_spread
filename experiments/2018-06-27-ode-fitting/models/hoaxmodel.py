@@ -27,15 +27,22 @@ class HoaxModel(ODEModel):
 
     Parameters
     ==========
-        pv      - probability to verify
-        tauinv  - inverse tau
-        alpha   - relative strenght of the hoax
+        pv      - probability to verify \in [0,1]
+        tauinv  - inverse tau \in [0,1]
+        alpha   - relative strenght of the hoax \in [0, 1]
 
     Notes
     =====
     The model is expressed as a system of ordinary differential equations.
     Returns y'(t), the derivative at y(t). Can be simulated using numerical
-    integration (see `models.base.ODEModel`).
+    integration by calling the `simulate()` method:
+
+    >>> from models.hoaxmodel import HoaxModel
+    >>> m = HoaxModel(pv=.1, tauinv=.2, alpha=.3)
+    >>> m.FA = m.BI = m.FI = 0
+    >>> m.S = 9000
+    >>> m.BA = 1000
+    >>> m.simulate(times=list(range(10)))
 
     """
     _theta = ['pv', 'tauinv', 'alpha']
@@ -52,12 +59,6 @@ class HoaxModel(ODEModel):
     FI = Variable(lower=0)
     S = Variable(lower=0)
 
-    def __init__(self, pv, tauinv, alpha):
-        super(HoaxModel, self).__init__()
-        self.pv = pv
-        self.tauinv = tauinv
-        self.alpha = alpha
-
     @staticmethod
     def obs(y):
         """
@@ -68,12 +69,11 @@ class HoaxModel(ODEModel):
     def dy(self, y, t):
         self.y = numpy.asfarray(y)
         f = self.BA / self.y.sum()
-        dy = [
-            f * self.BI - (self.tauinv + self.pv) * self.BA,  # dBA
-            f * self.FI - self.tauinv * self.FA,  # dFA
-            self.alpha * f * self.S + self.tauinv * self.BA - (f + self.pv) * self.BI,  # dBI
-            (1.0 - self.alpha) * f * self.S + self.pv * (self.BI + self.BA) + \
-                self.tauinv * self.FA - f * self.FI,  # dFI
-            -f * self.S,  # dS
-        ]
+        dBA = f * self.BI - (self.tauinv + self.pv) * self.BA
+        dFA = f * self.FI - self.tauinv * self.FA
+        dBI = self.alpha * f * self.S + self.tauinv * self.BA - (f + self.pv) * self.BI
+        dFI = (1.0 - self.alpha) * f * self.S + self.pv * (self.BI + self.BA) + \
+            self.tauinv * self.FA - f * self.FI
+        dS = -f * self.S  # dS
+        dy = [dBA, dFA, dBI, dFI, dS]
         return dy
