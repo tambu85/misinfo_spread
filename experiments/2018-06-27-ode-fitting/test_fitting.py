@@ -74,6 +74,7 @@ if __name__ == '__main__':
     # (y0). All fits are best of three (3) attempts.
     m1 = HoaxModel()
     m1.fit(data, nrep=3)
+    print("1) MAPE = {:2f}%".format(m1.error(data)))
 
     # Scenario 2) Like 1), but only BI0/FI0/S0 are unknown initial conditions.
     # BA0/FA0 are known and they are equal to the first observation of the
@@ -81,6 +82,7 @@ if __name__ == '__main__':
     m2 = HoaxModel()
     m2.BA, m2.FA = data[0]
     m2.fit(data, nrep=3)
+    print("2) MAPE = {:2f}%".format(m2.error(data)))
 
     # Plot true model, data, and fitted models.
     fig, axs = plt.subplots(1, 2)

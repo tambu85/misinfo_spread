@@ -4,7 +4,7 @@ import numpy
 import scipy.stats
 import scipy.integrate
 
-from utils import stderr
+from utils import pstderr, mape, smape, logaccratio
 
 __all__ = ['Variable', 'ODEModel']
 
@@ -331,9 +331,29 @@ class ODEModel(object):
                                                **kwargs)
             tmp.append(res)
         best_res = min(tmp, key=lambda k: k.cost)
-        self.err_ = stderr(best_res)
+        self.err_ = pstderr(best_res)
         self._assign(best_res.x, fitted=True)
         self.cost_ = best_res.cost
         del self.data
         del self.times
         return self
+
+    def error(self, data, times=None, metric='mape'):
+        """
+        Model prediction error.
+
+        metric : str
+            Error metric to use. It can be "mape", "smape", "logaccratio".
+            Default: mape.
+        """
+        if times is None:
+            times = numpy.arange(len(data))
+        y = self.simulate(times)
+        if metric == 'mape':
+            return mape(y, data)
+        elif metric == 'smape':
+            return smape(y, data)
+        elif metric == 'logaccratio':
+            return logaccratio(y, data)
+        else:
+            raise ValueError("No such metric: {}".format(metric))
