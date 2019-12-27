@@ -1,39 +1,8 @@
 import numpy
 import scipy
+import matplotlib.pyplot as plt
 
-from fitting import fitone
-from models import hoaxmodel
-
-
-def gendata(model, y0, t, sigma=0, *args):
-    """
-    Generate synthetic data with Gaussian noise from a given ODE model. The
-    function uses `scipy.integrate.odeint` to integrate the ODE system from a
-    given set of initial conditions, and then applies additional Gaussian noise
-    with 0 mean and tunable sigma.
-
-    Parameters
-    ==========
-    model : callable
-        a function implementing an ODE system.
-
-    y0 : ndarray
-        the vector of initial conditions of the model.
-
-    t : ndarray
-        the vector time points at which to integrate the model.
-
-    sigma : float
-        variance of gaussian noise term (default is no noise).
-
-    Notes
-    =====
-    Additional positional arguments (`args`) will be passed to `model` via
-    odeint. This can be used to specify the actual parameters of the model.
-    """
-    y = scipy.integrate.odeint(model, y0, t, args=args)
-    yerr = scipy.stats.norm.rvs(scale=sigma, size=y.shape)
-    return numpy.c_[t, y + yerr]
+from models.hoaxmodel import HoaxModel
 
 
 def printparams(xopt, xerr=None, names=None):
@@ -50,70 +19,73 @@ def printparams(xopt, xerr=None, names=None):
     print()
 
 
+def plot(fig, model, times, data=None, **kwargs):
+    fig = plt.gcf()
+    axs = fig.axes
+    y = model.simulate(times)
+    M = y.shape[1]
+    titles = ['BA', 'FA']
+    for k in range(M):
+        axs[k].set_title(titles[k])
+        axs[k].plot(times, y[:, k], **kwargs)
+        if data is not None:
+            axs[k].plot(times, data[:, k], color='k', ls='', marker='o',
+                        label='data')
+    axs[0].legend()
+
+
 if __name__ == '__main__':
+    # For reproducibility. Change seed to get different random numbers.
+    numpy.random.seed(214)
+
     # Model parameters
-    pv = 0.1
-    tauinv = 0.1
-    alpha = 0.5
-    x = (pv, tauinv, alpha)
+    m = HoaxModel(pv=0.1, tauinv=0.01, alpha=0.5)
 
-    # True value of the initial conditions of the system. In order they are:
-    # BA0, FA0, BI0, FI0, S0
-    y0 = (1000, 0, 0, 0, 9000)
-
-    names = [
-        "BA0",
-        "FA0",
-        "BI0",
-        "FI0",
-        "S0",
-        "pv",
-        "tauinv",
-        "alpha"
-    ]
+    m.FA = m.FI = m.BI = 0
+    m.S = 9000
+    m.BA = 1000
 
     # The true parameter values
-    printparams(y0 + x, names=names)
+    printparams(m.theta, names=m._theta)
+    printparams(m.y0, names=m._y0)
 
     # Vector of integration time steps
-    t = numpy.linspace(0, 10, 11)
+    tmax = 168
+    t = numpy.arange(tmax)
 
-    # Generate data by integrating ODE system and applying Gaussian noise with
+    # Generate data by simulating the ODE and applying Gaussian noise with
     # given sigma.
-    sigma = 2
-    data = gendata(hoaxmodel, y0, t, sigma, *x)
+    sigma = 50
+    y = m.simulate(t)
+    yerr = scipy.stats.norm.rvs(scale=sigma, size=y.shape)
 
-    # Keep only time, BA, FA
-    data = data[:, :3]
+    # Add a fraction of outliers to simulate noisy tweet counts.
+    p_outliers = 0.1
+    n_outliers = int(len(t) * p_outliers)
+    idx = numpy.random.choice(len(t), n_outliers, replace=False)
+    yerr[idx] *= 10
 
-    # Upper bound used by the optimiation routine for state variables unknowns
-    N_max = 1e6
+    # Add noise to simulated data. Finally, clip negative values to zero, to
+    # simulate count data.
+    data = y + yerr
+    data = data.clip(min=0)
 
-    # Scenario 1) The full vector of initial conditions is part of the unknown
-    # parameters to fit. To achieve this, set `fity0=True`.
+    # Scenario 1) Fit unknowns = model parameter (theta) + initial conditions
+    # (y0). All fits are best of three (3) attempts.
+    m1 = HoaxModel()
+    m1.fit(data, nrep=3)
 
-    bounds = [
-        (0, N_max),  # BA0
-        (0, N_max),  # FA0
-        (0, N_max),  # BI0
-        (0, N_max),  # FI0
-        (0, N_max),  # S0
-        (0, 1),  # pv
-        (0, 1),  # tauinv
-        (0, 1),  # alpha
-    ]
-    xopt1, err1 = fitone(data, hoaxmodel, 5, bounds, fity0=True, nrep=25)
-    printparams(xopt1, err1, names)
+    # Scenario 2) Like 1), but only BI0/FI0/S0 are unknown initial conditions.
+    # BA0/FA0 are known and they are equal to the first observation of the
+    # data.
+    m2 = HoaxModel()
+    m2.BA, m2.FA = data[0]
+    m2.fit(data, nrep=3)
 
-    # Scenario 2) Only BI0/FI0/S0 are unknown parameters to fit; BA0/FA0 are
-    # set to be equal to the first observation of the data.
-    bounds = [
-        (0, N_max),  # BI0
-        (0, N_max),  # FI0
-        (0, N_max),  # S0
-        (0, 1),  # pv
-        (0, 1),  # tauinv
-        (0, 1),  # alpha
-    ]
-    xopt2, err2 = fitone(data, hoaxmodel, 5, bounds, nrep=25)
-    printparams(xopt2, err2, names[2:])
+    # Plot true model, data, and fitted models.
+    fig, axs = plt.subplots(1, 2)
+    plot(fig, m, t, data, label='True', ls='-', lw=2)
+    plot(fig, m1, t, label='Fit #1 (all unknowns)', ls='--')
+    plot(fig, m2, t, label='Fit #2 (BA0/FA0 from data)', ls='--')
+    plt.show()
+    plt.tight_layout()

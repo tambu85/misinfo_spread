@@ -4,7 +4,7 @@ import numpy
 import scipy.stats
 import scipy.integrate
 
-# from utils import stderr
+from utils import stderr
 
 __all__ = ['Variable', 'ODEModel']
 
@@ -53,10 +53,11 @@ class Variable(object):
 
     def __get__(self, instance, owner=None):
         if instance is None:
-            # We do not allow this attribute to be accessed as a class
-            # attribute.
-            raise AttributeError("Not a class attribute")
+            # Return the descriptor instance if accessed as a class attribute.
+            return self
         try:
+            # Return the value managed by this descriptor instance if accessed
+            # as an instance attribute.
             return self.values[instance]
         except KeyError:
             # To signal the value has not been set yet.
@@ -171,16 +172,19 @@ class ODEModel(object):
         assert numpy.isclose(z, 0), "sum(dy) does not cancel out: {}".format(z)
         return dy
 
-    def simulate(self, y0=None, times=None, full=False, **kwargs):
+    def predict(self, times, full=False, **kwargs):
+        """
+        See simulate
+        """
+        return self.simulate(times, full=full, **kwargs)
+
+    def simulate(self, times, full=False, **kwargs):
         """
         Use numerical integration to simulate the model. For more information,
         `scipy.integrate.odeint`.
 
         Parameters
         ==========
-        y0 : sequence
-            Initial conditions (optional).
-
         times : times
             The system is evaluated at these times (optional).
 
@@ -195,11 +199,7 @@ class ODEModel(object):
 
         Additional keyword arguments are passed to `scipy.integrate.odeint`.
         """
-        if y0 is not None:
-            self.y0 = y0
-        if times is not None:
-            self.times = times
-        y = scipy.integrate.odeint(self, self.y0, self.times, **kwargs)
+        y = scipy.integrate.odeint(self, self.y0, times, **kwargs)
         if full:
             return y
         elif self._do_agg:
@@ -215,18 +215,21 @@ class ODEModel(object):
             try:
                 getattr(self, name)
             except AttributeError:
-                v = C.__dict__[name]
+                v = getattr(C, name)
                 lower = v.lower if v.lower is not None else -numpy.inf
                 upper = v.upper if v.upper is not None else +numpy.inf
                 tmp.append((lower, upper))
         return tmp
 
-    def _assign(self, x):
+    def _assign(self, x, fitted=False):
         """
-        Assign missing values to a model.
+        Assign missing values to a model. If fitted is True, also set
+        attribute with the same name and a trailing underscore, e.g.:
 
-        If inplace is True, will assign to itself, otherwise a new object will
-        be returned.
+            alpha -> alpha_
+
+        This follows the same convention of scikit-learn and means that the
+        attribute has been estimated. (Default: fitted = False.)
         """
         x = list(x)
         var_names = self._theta + self._y0
@@ -237,6 +240,9 @@ class ODEModel(object):
                 # This variable is an unknown
                 value = x.pop(0)
                 setattr(self, name, value)
+                if fitted:
+                    # estimated attribute
+                    setattr(self, name + '_', value)
         # Make sure all unknowns have been assigned.
         if len(x) > 0:
             raise ValueError("Some unknowns not assigned: {}".format(x))
@@ -255,7 +261,7 @@ class ODEModel(object):
         """
         obj = copy.copy(self)
         obj._assign(x)
-        yarr = obj.simulate()
+        yarr = obj.simulate(self.times)
         return (yarr - self.data).ravel()
 
     def fit(self, data, times=None, x0=None, nrep=10, **kwargs):
@@ -300,13 +306,22 @@ class ODEModel(object):
         if times is None:
             times = numpy.arange(len(data))
         self.times = times
-        # draw x0 at random from bounds.
         if x0 is None:
+            # Draw x0 at random from bounds. If any unknown is unconstrained,
+            # set the initial guess to 1.0 (a safe value).
             size = (nrep, len(bounds))
             x0seq = scipy.stats.uniform.rvs(lower_bounds, upper_bounds, size)
+            idx = numpy.isinf(x0seq)
+            x0seq[idx] = 1.0
         else:
+            # Use provided x0 for all repetitions
             x0seq = (x0 for i in range(nrep))
         x_scale = numpy.diff(bounds, axis=1).ravel()
+        # We cannot mix finite and infinite x_scale values, so if any unknown
+        # is unconstrained, we let the routine estimate x_scale using the
+        # Jacobian.
+        if numpy.isinf(x_scale).any():
+            x_scale = 'jac'
         tmp = []
         for _x0 in x0seq:
             res = scipy.optimize.least_squares(self._residuals, _x0,
@@ -316,8 +331,9 @@ class ODEModel(object):
                                                **kwargs)
             tmp.append(res)
         best_res = min(tmp, key=lambda k: k.cost)
-        # err = stderr(best_res)
-        self._assign(best_res.x)
+        self.err_ = stderr(best_res)
+        self._assign(best_res.x, fitted=True)
+        self.cost_ = best_res.cost
         del self.data
         del self.times
         return self
