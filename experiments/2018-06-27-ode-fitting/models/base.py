@@ -4,7 +4,7 @@ import numpy
 import scipy.stats
 import scipy.integrate
 
-from utils import stderr
+# from utils import stderr
 
 __all__ = ['Variable', 'ODEModel']
 
@@ -99,7 +99,7 @@ class ODEModel(object):
     _theta = []
 
     # list of attribute names in the vector of state variables
-    _y = []
+    _y0 = []
 
     def __init__(self, **kwargs):
         super(ODEModel, self).__init__()
@@ -118,7 +118,7 @@ class ODEModel(object):
             except AttributeError:
                 pass
         y_state = {}
-        for name in self._y:
+        for name in self._y0:
             try:
                 y_state[name] = getattr(self, name)
             except AttributeError:
@@ -147,65 +147,69 @@ class ODEModel(object):
 
     theta = property(gettheta, settheta, None, "Vector of parameters")
 
-    def gety(self):
+    def gety0(self):
         """ Get the vector of state variables """
-        x = [getattr(self, name, numpy.nan) for name in self._y]
+        x = [getattr(self, name, numpy.nan) for name in self._y0]
         return numpy.asfarray(x)
 
-    def sety(self, y):
+    def sety0(self, y0):
         """ Set the vector of parameters """
-        for name, value in zip(self._y, y):
+        for name, value in zip(self._y0, y0):
             setattr(self, name, value)
 
-    y = property(gety, sety, None, "Vector of state variables")
+    y0 = property(gety0, sety0, None, "Vector of state variables")
 
-    def dy(self, y, t, *args):
+    def dy(self, y, t):
         """
         Subclassess need to instantiate this.
         """
         raise NotImplementedError()
 
-    def __call__(self, y, t, *args, **kwargs):
+    def __call__(self, y, t):
         dy = self.dy(y, t)
         z = numpy.sum(dy)
-        assert numpy.isclose(z, 0, atol=1e5), \
-            "sum(dy) does not cancel out: {}".format(z)
+        assert numpy.isclose(z, 0), "sum(dy) does not cancel out: {}".format(z)
         return dy
 
-    def simulate(self, y=None, times=None, **kwargs):
+    def simulate(self, y0=None, times=None, full=False, **kwargs):
         """
         Use numerical integration to simulate the model. For more information,
         `scipy.integrate.odeint`.
 
         Parameters
         ==========
-        y : sequence
+        y0 : sequence
             Initial conditions (optional).
 
         times : times
             The system is evaluated at these times (optional).
 
+        full : bool
+            Return the full system, not just the observables variables.
+            (optional.)
+
         Notes
         =====
-        If neither `y` nor `times` is passed, the method will use the values of
-        the instance. If passed, the instance values take the passed values.
+        If neither `y0` nor `times` is passed, the method will use the values
+        of the instance. If passed, the instance values take the passed values.
 
         Additional keyword arguments are passed to `scipy.integrate.odeint`.
         """
-        if y is not None:
-            self.y = y
+        if y0 is not None:
+            self.y0 = y0
         if times is not None:
             self.times = times
-        y = scipy.integrate.odeint(self, self.y, self.times,
-                                   args=tuple(self.theta), **kwargs)
-        if self._do_agg:
+        y = scipy.integrate.odeint(self, self.y0, self.times, **kwargs)
+        if full:
+            return y
+        elif self._do_agg:
             return self.obs(y)
         else:
             return y
 
-    def getbounds(self):
+    def _getbounds(self):
         C = self.__class__
-        var_names = self._theta + self._y
+        var_names = self._theta + self._y0
         tmp = []
         for name in var_names:
             try:
@@ -217,7 +221,27 @@ class ODEModel(object):
                 tmp.append((lower, upper))
         return tmp
 
-    def residuals(self, x):
+    def _assign(self, x):
+        """
+        Assign missing values to a model.
+
+        If inplace is True, will assign to itself, otherwise a new object will
+        be returned.
+        """
+        x = list(x)
+        var_names = self._theta + self._y0
+        for name in var_names:
+            try:
+                getattr(self, name)
+            except AttributeError:
+                # This variable is an unknown
+                value = x.pop(0)
+                setattr(self, name, value)
+        # Make sure all unknowns have been assigned.
+        if len(x) > 0:
+            raise ValueError("Some unknowns not assigned: {}".format(x))
+
+    def _residuals(self, x):
         """
         x is a vector of values for unknown variables of the model. It may
         include model parameters (theta) and initial conditions (y).
@@ -226,20 +250,11 @@ class ODEModel(object):
         attributes set:
             * times
             * data
+
+        A new object is created to compute the residuals.
         """
         obj = copy.copy(self)
-        x = list(x)
-        var_names = obj._theta + obj._y
-        for name in var_names:
-            try:
-                getattr(obj, name)
-            except AttributeError:
-                # This variable is an unknown
-                value = x.pop()
-                setattr(obj, name, value)
-        # Make sure all unknowns have been assigned.
-        if len(x) > 0:
-            raise ValueError("Some unknowns not assigned: {}".format(x))
+        obj._assign(x)
         yarr = obj.simulate()
         return (yarr - self.data).ravel()
 
@@ -269,11 +284,7 @@ class ODEModel(object):
 
         Returns
         =======
-        xopt : ndarray
-            An (M,) ndarray of fit estimates.
-
-        xerr : ndarray
-            An (M,) ndarray of standard errors of the fit.
+        self : a fitted instance of ODEModel
 
         Notes
         =====
@@ -282,7 +293,7 @@ class ODEModel(object):
         automatically inferred from the model variables. See
         `scipy.optimize.least_squares` for more information.
         """
-        bounds = self.getbounds()
+        bounds = self._getbounds()
         lower_bounds, upper_bounds = zip(*bounds)
         self.data = data
         # default times
@@ -298,11 +309,15 @@ class ODEModel(object):
         x_scale = numpy.diff(bounds, axis=1).ravel()
         tmp = []
         for _x0 in x0seq:
-            res = scipy.optimize.least_squares(self.residuals, _x0,
+            res = scipy.optimize.least_squares(self._residuals, _x0,
                                                x_scale=x_scale,
                                                bounds=(lower_bounds,
                                                        upper_bounds),
                                                **kwargs)
             tmp.append(res)
         best_res = min(tmp, key=lambda k: k.cost)
-        return best_res.x, stderr(best_res)
+        # err = stderr(best_res)
+        self._assign(best_res.x)
+        del self.data
+        del self.times
+        return self

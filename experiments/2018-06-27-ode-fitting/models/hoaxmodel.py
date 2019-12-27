@@ -1,13 +1,13 @@
 """ Hoax model by Tambuscio et al. """
 
-import numpy
-
 from models.base import ODEModel, Variable
 
 __all__ = ['HoaxModel']
 
-N_MAX = 1e9  #  upper bound for all initial conditions. This is bigger than the
-             #  total number of daily active users of Twitter.
+#  upper bound for all initial conditions. This is bigger than the total number
+#  of daily active users of Twitter.
+N_MAX = 1e5
+
 
 class HoaxModel(ODEModel):
     """
@@ -30,9 +30,9 @@ class HoaxModel(ODEModel):
 
     Parameters
     ==========
-        pv      - probability to verify \in [0,1]
-        tauinv  - inverse tau \in [0,1]
-        alpha   - relative strenght of the hoax \in [0, 1]
+        pv      - probability to verify (bounded in [0,1])
+        tauinv  - inverse tau (bounded in [0,1])
+        alpha   - relative strenght of the hoax (bounded in [0, 1])
 
     Notes
     =====
@@ -46,7 +46,6 @@ class HoaxModel(ODEModel):
     >>> m.S = 9000
     >>> m.BA = 1000
     >>> m.simulate(times=list(range(10)))
-
     """
     _theta = ['pv', 'tauinv', 'alpha']
 
@@ -54,7 +53,7 @@ class HoaxModel(ODEModel):
     tauinv = Variable(lower=0, upper=1)
     alpha = Variable(lower=0, upper=1)
 
-    _y = ['BA', 'FA', 'BI', 'FI', 'S']
+    _y0 = ['BA', 'FA', 'BI', 'FI', 'S']
 
     BA = Variable(lower=0, upper=N_MAX)
     FA = Variable(lower=0, upper=N_MAX)
@@ -70,13 +69,13 @@ class HoaxModel(ODEModel):
         return y[:, :2]
 
     def dy(self, y, t):
-        self.y = numpy.asfarray(y)
-        f = self.BA / self.y.sum()
-        dBA = f * self.BI - (self.tauinv + self.pv) * self.BA
-        dFA = f * self.FI - self.tauinv * self.FA
-        dBI = self.alpha * f * self.S + self.tauinv * self.BA - (f + self.pv) * self.BI
-        dFI = (1.0 - self.alpha) * f * self.S + self.pv * (self.BI + self.BA) + \
-            self.tauinv * self.FA - f * self.FI
-        dS = -f * self.S  # dS
+        BA, FA, BI, FI, S = y
+        f = BA / float(y.sum())
+        dBA = f * BI - (self.tauinv + self.pv) * BA
+        dFA = f * FI - self.tauinv * FA
+        dBI = self.alpha * f * S + self.tauinv * BA - (f + self.pv) * BI
+        dFI = (1.0 - self.alpha) * f * S + self.pv * (BI + BA) + \
+            self.tauinv * FA - f * FI
+        dS = -f * S
         dy = [dBA, dFA, dBI, dFI, dS]
         return dy
