@@ -24,6 +24,7 @@ NOW = datetime.datetime.now()
 # Used by cmd line parser
 AVAIL_MODELS = [v.__name__ for v in models.__dict__.values()
                 if isinstance(v, type) and issubclass(v, models.ODEModel)]
+# The base class -- cannot be chosen
 AVAIL_MODELS.remove('ODEModel')
 
 # Find out terminal size
@@ -77,11 +78,18 @@ def fit(df, modelcls='HoaxModel'):
     m.BA = df.loc[t0]['fake']
     data = numpy.c_[df['fake'], df['fact']]
     m.fit(data)
-    xopt = numpy.hstack([m.y0, m.theta])
-    names = m._y0 + m._theta
-    err = numpy.hstack([[0.0, 0.0], m.err_])
-    for n, x, e in zip(names, xopt, err):
-        print("{}: {:.2e} +/- {:.2e}".format(n, x, e))
+    m.summary()
+    metrics = {
+        "mape": "MAPE",
+        "smape": "SMAPE",
+        "logaccratio": "LOG ACC. RATIO"
+    }
+    width = max(map(len, metrics.values()))
+    for metric in metrics:
+        err = m.error(data, metric=metric)
+        print("{metric:>{width}}: {err: 6.2f}%".format(metric=metrics[metric],
+                                                       width=width,
+                                                       err=err))
     t = numpy.arange(len(df))
     fit_data = m.simulate(t)
     fit_df = pandas.DataFrame(fit_data, columns=["fake", "fact"])

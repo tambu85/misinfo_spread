@@ -338,6 +338,96 @@ class ODEModel(object):
         del self.times
         return self
 
+    def summary(self, fmt='.2e'):
+        """
+        Prints to console a summary of all model variables and errors.
+
+        Parameters
+        ==========
+        fmt - floating point number format
+        """
+        headers = {
+            "name": "NAME",
+            "value": "VALUE",
+            "error": "ERR. (+/-)"
+        }
+        num_template = "{{:{0}}}".format(fmt)
+        name_template = "{name:>{name_width}}"
+        value_template = "{{value:> {{value_width}}{0}}}".format(fmt)
+        error_template = "{{error:>{{error_width}}{0}}}{{ast}}".format(fmt)
+        row_template = "{}  {}  {}".format(name_template, value_template,
+                                           error_template)
+        var_names = self._theta + self._y0
+        i = 0
+        records = []
+        value_widths = []
+        error_widths = []
+        name_widths = list(map(len, var_names))
+        name_widths.append(len(headers["name"]))
+        for name in var_names:
+            record = {}
+            record["name"] = name
+            if hasattr(self, name + '_'):
+                # estimated variable
+                record["value"] = getattr(self, name + '_')
+                record["error"] = self.err_[i]
+                i += 1
+            else:
+                try:
+                    record["value"] = getattr(self, name)
+                except AttributeError:
+                    record["value"] = -1.0
+                record["error"] = 0.0
+            records.append(record)
+            value_len = len(num_template.format(record["value"]))
+            error_len = len(num_template.format(record["error"]))
+            value_widths.append(value_len)
+            error_widths.append(error_len)
+        value_widths.append(len(headers["value"]))
+        error_widths.append(len(headers["error"]))
+        widths = {
+            "name": max(name_widths) + 2,
+            "value": max(value_widths) + 2,
+            "error": max(error_widths) + 2
+        }
+        print("{0}  {1}  {2}".format("=" * widths["name"],
+                                     "=" * widths["value"],
+                                     "=" * widths["error"]))
+        print("{0:^{3}}  {1:^{4}}  {2:^{5}}".format(headers["name"],
+                                                    headers["value"],
+                                                    headers["error"],
+                                                    widths["name"],
+                                                    widths["value"],
+                                                    widths["error"]))
+        print("{0}  {1}  {2}".format("=" * widths["name"],
+                                     "=" * widths["value"],
+                                     "=" * widths["error"]))
+        ast_flag = False
+        one_flag = False
+        for record in records:
+            record["name_width"] = widths["name"]
+            record["value_width"] = widths["value"]
+            record["error_width"] = widths["error"]
+            record["ast"] = ""
+            if record["value"] == -1.0:
+                one_flag = True
+                record["ast"] = "^"
+            elif record["error"] == 0.0:
+                record["ast"] = "*"
+                ast_flag = True
+            print(row_template.format(**record))
+        print("{0}  {1}  {2}".format("=" * widths["name"],
+                                     "=" * widths["value"],
+                                     "=" * widths["error"]))
+        if ast_flag:
+            print("* From data.")
+        if one_flag:
+            print("^ Value = -1.0: variable not set.")
+        if ast_flag or one_flag:
+            print("{0}  {1}  {2}".format("=" * widths["name"],
+                                         "=" * widths["value"],
+                                         "=" * widths["error"]))
+
     def error(self, data, times=None, metric='mape'):
         """
         Model prediction error.
