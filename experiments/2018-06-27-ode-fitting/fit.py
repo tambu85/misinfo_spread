@@ -30,8 +30,9 @@ AVAIL_MODELS.remove('ODEModel')
 # Find out terminal size
 py_vers = sys.version_info
 if py_vers.major >= 3 and py_vers.minor >= 3:
+    import shutil
     # on Python 3.3+ use os.get_terminal_size
-    TERM_COLS = os.get_terminal_size().columns
+    TERM_COLS = shutil.get_terminal_size().columns
 elif os.name is "posix":
     # if that's not available ...
     # ... on Linux/Unix use stty to get terminal size
