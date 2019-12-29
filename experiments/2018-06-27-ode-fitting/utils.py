@@ -73,7 +73,10 @@ def smape(x, y, frac=False):
     N = len(y)
     num = numpy.abs(x - y)
     den = numpy.abs(x) + numpy.abs(y)
-    err = (num / den).sum() / float(N)
+    N_nnz = N - (den == 0).sum()
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        err = numpy.nansum(num / den) / float(N_nnz)
     if frac:
         return err
     else:
@@ -96,8 +99,9 @@ def logaccratio(x, y, frac=False):
     """
     x = numpy.ravel(x)
     y = numpy.ravel(y)
-    N = len(y)
-    err = numpy.log(x / y).sum() / float(N)
+    idx = (y == 0)
+    N_nnz = len(y) - idx.sum()
+    err = numpy.log(x[~idx] / y[~idx]).sum() / float(N_nnz)
     if frac:
         return err
     else:
