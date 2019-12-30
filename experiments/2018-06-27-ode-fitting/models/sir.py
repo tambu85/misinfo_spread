@@ -88,8 +88,9 @@ class DoubleSIR(ODEModel):
 
     # XXX not sure how to make sure that N stays the same across the two models
     def dy(self, y, t):
-        S1, I1, R1, S2, I2, R2 = y
-        dy1 = self.sir1([S1, I1, R1], t)
-        dy2 = self.sir2([S2, I2, R2], t)
+        self.sir1.theta = self.theta[:2]
+        self.sir2.theta = self.theta[2:]
+        dy1 = self.sir1.dy(y[:3], t)
+        dy2 = self.sir2.dy(y[3:], t)
         dy = dy1 + dy2  # list concatenation
         return dy
