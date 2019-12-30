@@ -44,7 +44,12 @@ class SEIZ(ODEModel):
 
     _y0 = ["S", "E", "I", "Z"]
 
-    @classmethod
+    S = Variable(lower=0)
+    E = Variable(lower=0)
+    I = Variable(lower=0)  # noqa
+    Z = Variable(lower=0)
+
+    @staticmethod
     def obs(y):
         """
         Return I and Z
