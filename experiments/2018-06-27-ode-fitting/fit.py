@@ -1,4 +1,4 @@
-""" Fit HoaxModel to data and plot results """
+""" Fit an O.D.E. model to one or more stories. """
 
 from __future__ import print_function
 import os
