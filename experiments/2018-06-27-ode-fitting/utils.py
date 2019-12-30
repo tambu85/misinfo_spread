@@ -99,7 +99,9 @@ def logaccratio(x, y, frac=False):
     """
     x = numpy.ravel(x)
     y = numpy.ravel(y)
-    idx = (y == 0)
+    x_idx = (x == 0)
+    y_idx = (y == 0)
+    idx = x_idx | y_idx
     N_nnz = len(y) - idx.sum()
     err = numpy.log(x[~idx] / y[~idx]).sum() / float(N_nnz)
     if frac:
