@@ -53,7 +53,7 @@ class SegHoaxModel(ODEModel):
     pvsk = Variable(lower=0, upper=1)
     tauinv = Variable(lower=0, upper=1)
     alpha = Variable(lower=0, upper=1)
-    seg = Variable(lower=0.5, upper=1)
+    seg = Variable(lower=0, upper=1)
     gamma = Variable(lower=0, upper=1)
 
     _y0 = [
