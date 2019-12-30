@@ -1,22 +1,11 @@
 """ Hoax model with segregation by Tambuscio et al. """
 
-import numpy
+from models.base import ODEModel, Variable
+
+__all__ = ['SegHoaxModel']
 
 
-def _checkparamsseg(pv, tauinv, alphagu, alphask, s, gamma):
-    assert 0 <= pv <= 1, "pv: out of bounds: {}".format(pv)
-    assert 0 <= alphagu <= 1, "alphagu: out of bounds: {}".format(alphagu)
-    assert 0 <= alphask <= 1, "alphask: out of bounds: {}".format(alphask)
-    assert 0 <= tauinv <= 1, "tauinv: out of bounds: {}".format(tauinv)
-    assert 0.5 <= s <= 1, "s: out of bounds: {}".format(s)
-    assert 0 <= gamma <= 1, "gamma: out of bounds: {}".format(gamma)
-
-
-def hoaxmodelseg_aggfunc(y):
-    return numpy.reshape(y, (-1, 2)).sum(axis=1)
-
-
-def hoaxmodelseg(y, t, pvgu, pvsk, tauinv, alpha, s, gamma):
+class SegHoaxModel(ODEModel):
     """
     Hoax Model by Tambuscio et al. This is the model with segregation.
 
@@ -31,16 +20,16 @@ def hoaxmodelseg(y, t, pvgu, pvsk, tauinv, alpha, s, gamma):
 
     State
     =====
-        S_gu   - susceptible gullible
-        S_sk   - susceptible skeptic
-        BI_gu  - inactive believers gullible
-        BI_sk  - inactive believers skeptic
         BA_gu  - active believers gullible
-        BA_sk  - active believers skeptic
-        FI_gu  - inactive fact-checkers gullible
-        FI_sk  - inactive fact-checkers skeptic
         FA_gu  - active fact-checkers gullible
+        BI_gu  - inactive believers gullible
+        FI_gu  - inactive fact-checkers gullible
+        S_gu   - susceptible gullible
+        BA_sk  - active believers skeptic
         FA_sk  - active fact-checkers skeptic
+        BI_sk  - inactive believers skeptic
+        FI_sk  - inactive fact-checkers skeptic
+        S_sk   - susceptible skeptic
 
     Parameters
     ==========
@@ -58,25 +47,71 @@ def hoaxmodelseg(y, t, pvgu, pvsk, tauinv, alpha, s, gamma):
     integration (see `scipy.integrate.odeint`).
 
     """
-    _checkparamsseg(pvgu, pvsk, tauinv, alpha, s, gamma)
-    y = numpy.asfarray(y)
-    BAgu, BAsk, FAgu, FAsk, BIgu, BIsk,  FIgu, FIsk, Sgu, Ssk, = y
-    N = y.sum()
-    fgu = s * gamma * BAgu / N + (1 - s) * (1 - gamma) * BAsk / N
-    fsk = s * (1 - gamma) * BAgu / N + (1 - s) * gamma * BAsk / N
-    dy = [
-        fgu * BIgu - (tauinv + pvgu) * BAgu,  # BAgu
-        fsk * BIsk - (tauinv + pvsk) * BAsk,  # BAsk
-        fgu * FIgu - tauinv * FAgu,  # FAgu
-        fsk * FIsk - tauinv * FAsk,  # FAsk
-        alpha * fgu * Sgu + tauinv * BAgu - (fgu + pvgu) * BIgu,  # BIgu
-        alpha * fsk * Ssk + tauinv * BAsk - (fsk + pvsk) * BIsk,  # BIsk
-        (1.0 - alpha) * fgu * Sgu + pvgu * (BIgu + BAgu) + tauinv * FAgu - \
-        fgu * FIgu,  # FIgu
-        (1.0 - alpha) * fsk * Ssk + pvsk * (BIsk + BAsk) + tauinv * FAsk - \
-        fsk * FIsk,  # FIsk
-        -fgu * Sgu,  # Sgu
-        -fsk * Ssk,  # Ssk
+    _theta = ["pvgu", "psk", "tauinv", "alpha", "seg", "gamma"]
+
+    pvgu = Variable(lower=0, upper=1)
+    pvsk = Variable(lower=0, upper=1)
+    tauinv = Variable(lower=0, upper=1)
+    alpha = Variable(lower=0, upper=1)
+    seg = Variable(lower=0.5, upper=1)
+    gamma = Variable(lower=0, upper=1)
+
+    _y0 = [
+        "BA_gu",
+        "FA_gu",
+        "BI_gu",
+        "FI_gu",
+        "S_gu",
+        "BA_sk",
+        "FA_sk",
+        "BI_sk",
+        "FI_sk",
+        "S_sk"
     ]
-    assert numpy.isclose(numpy.sum(dy), 0), "sum(dy) does not cancel out"
-    return dy
+
+    BA_gu = Variable(lower=0)
+    FA_gu = Variable(lower=0)
+    BI_gu = Variable(lower=0)
+    FI_gu = Variable(lower=0)
+    S_gu = Variable(lower=0)
+    BA_sk = Variable(lower=0)
+    FA_sk = Variable(lower=0)
+    BI_sk = Variable(lower=0)
+    FI_sk = Variable(lower=0)
+    S_sk = Variable(lower=0)
+
+    @staticmethod
+    def obs(y):
+        """
+        Returns BA_gu + BA_sk and FA_gu + FA_sk
+        """
+        y_gu = y[:, :2]  # BA_gu, FA_gu
+        y_sk = y[:, 5:7]  # BA_sk, FA_sk
+        return y_gu + y_sk
+
+    def dy(self, y, t):
+        BA_gu, FA_gu, BI_gu, FI_gu, S_gu, BA_sk, FA_sk, BI_sk, FI_sk, S_sk = y
+        N = (BA_gu + BA_sk) / float(y.sum())
+        fgu = self.self.seg * self.self.gamma * BA_gu / N + (1 - self.seg) * \
+            (1 - self.gamma) * BA_sk / N
+        fsk = self.seg * (1 - self.gamma) * BA_gu / N + (1 - self.seg) * \
+            self.gamma * BA_sk / N
+        dBA_gu = fgu * BI_gu - (self.tauinv + self.pvgu) * BA_gu
+        dBA_sk = fsk * BI_sk - (self.tauinv + self.pvsk) * BA_sk
+        dFA_gu = fgu * FI_gu - self.tauinv * FA_gu
+        dFA_sk = fsk * FI_sk - self.tauinv * FA_sk
+        dBI_gu = self.alpha * fgu * S_gu + self.tauinv * BA_gu - \
+            (fgu + self.pvgu) * BI_gu
+        dBI_sk = self.alpha * fsk * S_sk + self.tauinv * BA_sk - \
+            (fsk + self.pvsk) * BI_sk
+        dFI_gu = (1.0 - self.alpha) * fgu * S_gu + self.pvgu * \
+            (BI_gu + BA_gu) + self.tauinv * FA_gu - fgu * FI_gu
+        dFI_sk = (1.0 - self.alpha) * fsk * S_sk + self.pvsk * \
+            (BI_sk + BA_sk) + self.tauinv * FA_sk - fsk * FI_sk
+        dS_gu = -fgu * S_gu
+        dS_sk = -fsk * S_sk
+        dy = [
+           dBA_gu, dFA_gu, dBI_gu, dFI_gu, dS_gu, dBA_sk, dFA_sk, dBI_sk,
+           dFI_sk, dS_sk
+        ]
+        return dy
