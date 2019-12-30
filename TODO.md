@@ -1,6 +1,7 @@
 # TODO List
 
 ## High priority:
+- [ ] Fix SEIZ model --- dy does not cancel out?
 - [ ] Fit all models on simplified dataset;
 - [ ] Fit all models on full dataset;
 - [ ] Plot MAPE/SMAPE/LOG ACC RATIO/RMSE to do model selection;
