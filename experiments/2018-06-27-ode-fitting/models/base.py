@@ -310,7 +310,9 @@ class ODEModel(object):
             # Draw x0 at random from bounds. If any unknown is unconstrained,
             # set the initial guess to 1.0 (a safe value).
             size = (nrep, len(bounds))
-            x0seq = scipy.stats.uniform.rvs(lower_bounds, upper_bounds, size)
+            loc = lower_bounds
+            scale = numpy.asarray(upper_bounds) - numpy.asarray(lower_bounds)
+            x0seq = scipy.stats.uniform.rvs(loc, scale, size)
             idx = numpy.isinf(x0seq)
             x0seq[idx] = 1.0
         else:
