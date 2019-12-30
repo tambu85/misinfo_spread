@@ -10,7 +10,7 @@ Contents
 
 3. SIR (Susceptible-Infected-Recovered). See `sir`.
 
-4. Double SIR (i.e., two independent SIR processes). See `doublesir`.
+4. Double SIR (i.e., two independent SIR processes). See `sir`.
 
 5. SEIZ (Susceptible-Exposed-Infected-Skeptic) by Jin et al. (2013). See
 `seiz`.
