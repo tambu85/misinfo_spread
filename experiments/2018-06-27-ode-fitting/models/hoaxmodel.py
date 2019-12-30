@@ -63,6 +63,10 @@ class HoaxModel(ODEModel):
         """
         return y[:, :2]
 
+    def inity0(self, BA, FA):
+        self.BA = BA
+        self.FA = FA
+
     def dy(self, y, t):
         BA, FA, BI, FI, S = y
         f = BA / float(y.sum())

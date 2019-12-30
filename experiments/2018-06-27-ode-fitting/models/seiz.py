@@ -56,6 +56,10 @@ class SEIZ(ODEModel):
         """
         return y[:, 2:]
 
+    def inity0(self, I, Z):
+        self.I = I  # noqa
+        self.Z = Z
+
     def dy(self, y, t):
         S, E, I, Z = y
         N = float(y.sum())

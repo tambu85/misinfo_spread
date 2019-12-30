@@ -75,8 +75,12 @@ def fit(df, modelcls='HoaxModel'):
     t0 = df.index[0]
     M = getattr(models, modelcls)
     m = M()
-    m.FA = df.loc[t0]['fact']
-    m.BA = df.loc[t0]['fake']
+    BA0 = df.loc[t0]['fake']
+    FA0 = df.loc[t0]['fact']
+    try:
+        m.inity0(BA0, FA0)
+    except NotImplementedError:
+        pass
     data = numpy.c_[df['fake'], df['fact']]
     m.fit(data)
     m.summary()

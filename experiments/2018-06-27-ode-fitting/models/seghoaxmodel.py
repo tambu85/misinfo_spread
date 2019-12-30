@@ -89,6 +89,10 @@ class SegHoaxModel(ODEModel):
         y_sk = y[:, 5:7]  # BA_sk, FA_sk
         return y_gu + y_sk
 
+    def inity0(self, BA, FA):
+        self.BA_gu = BA
+        self.FA_gu = FA
+
     def dy(self, y, t):
         BA_gu, FA_gu, BI_gu, FI_gu, S_gu, BA_sk, FA_sk, BI_sk, FI_sk, S_sk = y
         N = (BA_gu + BA_sk) / float(y.sum())

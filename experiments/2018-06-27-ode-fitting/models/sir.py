@@ -86,6 +86,12 @@ class DoubleSIR(ODEModel):
         """
         return y[:, [1, 4]]
 
+    def inity0(self, I1, I2):
+        self.I1 = I1
+        self.I2 = I2
+        self.sir1.I = I1  # noqa
+        self.sir2.I = I2  # noqa
+
     # XXX not sure how to make sure that N stays the same across the two models
     def dy(self, y, t):
         self.sir1.theta = self.theta[:2]

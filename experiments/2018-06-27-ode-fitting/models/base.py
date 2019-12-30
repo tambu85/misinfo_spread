@@ -95,6 +95,9 @@ class ODEModel(object):
            for example not all state variables can be compared to empirical
            data, or when multiple state variables need to be aggregated to
            provide the actual observables.
+
+        5. (Optional) Implement the `inity0(self, **kwargs)` method to
+           initialize the initial conditions to the data.
     """
     # list of attribute names in the vector of parameters
     _theta = []
@@ -162,7 +165,23 @@ class ODEModel(object):
 
     def dy(self, y, t):
         """
-        Subclassess need to instantiate this.
+        Subclassess *must* to implement this to provide the instantaneous
+        derivative of the model for integration.
+        """
+        raise NotImplementedError()
+
+    @staticmethod
+    def obs(y):
+        """
+        Subclasses can implement this to compute observable variables when not
+        all state variable have a corresponding datum.
+        """
+        raise NotImplementedError()
+
+    def inity0(self, **kwargs):
+        """
+        Subclasses can implement this to initialize (part of) the initial
+        conditions using the data.
         """
         raise NotImplementedError()
 
