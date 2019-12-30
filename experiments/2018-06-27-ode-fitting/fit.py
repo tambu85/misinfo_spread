@@ -1,4 +1,4 @@
-""" Fit an O.D.E. model to one or more stories. """
+""" Fit an O.D.E. model to empirical data. """
 
 from __future__ import print_function
 import os
@@ -13,19 +13,14 @@ import matplotlib.pyplot as plt
 import argparse
 from contextlib import closing
 
-# TODO
-# 1. fit all stories available in the file
-# 2. Save each plot in a separate PDF file
-# 3. Pickle all models in a dict, with name models-${DATE}.pickle
-# 4. Dump command line args object into output pickle
-
 import models
 
 # Path template
-OPATH = 'story{storyid:02d}-{model}-{date}T{hour}.{format}'
+OPATH_MOD = 'models-{model}-{timestamp}.pickle'
+OPATH_FIG = 'fig-{model}-{timestamp}-{story:02d}.pdf'
 
 # Used in path template
-NOW = datetime.datetime.now()
+NOW = datetime.datetime.now().replace(microsecond=0)
 
 # Used by cmd line parser
 AVAIL_MODELS = [v.__name__ for v in models.__dict__.values()
@@ -62,31 +57,53 @@ def _ishdf(path):
     return m is not None
 
 
-def readdata(path, storyid):
+def readdata(path, stories=None):
     if _ishdf(path):
+        # HDFStore where each story is a separate data frame, keyed as
+        #
+        #   /story_XX
+        #
+        # Where XX is a two-digit story ID. The dataframes are indexed by
+        # timestamp.
         store = pandas.HDFStore(path)
         with closing(store):
-            k = "/story_{:02d}".format(storyid)
-            df = store.get(k)
+            for key in store:
+                story = int(re.findall(r"\d+", key)[0])
+                if stories is not None and story not in stories:
+                    continue
+                df = store.get(key)
+                df = df.sum(axis=1, level=0)
+                yield (story, df)
     elif _iscsv(path):
-        df = pandas.read_csv(path, index_col=0, parse_dates=True)
-        df = df.loc[storyid].set_index('timestamp')
-    if df.columns.nlevels > 1:
-        # Aggregate multiple URLs
-        df = df.sum(axis=1, level=0)
-    return df
+        # CSV file with all stories, first column is the ID of the story.
+        full_df = pandas.read_csv(path, index_col=0, parse_dates=True)
+        for story in full_df.index.unique():
+            if stories is not None and story not in stories:
+                continue
+            df = full_df.loc[story].set_index('timestamp')
+            yield (story, df)
 
 
-def fit(df, modelcls='HoaxModel'):
+def fit(df, modelcls='HoaxModel', fity0="non-obs"):
     t0 = df.index[0]
-    M = getattr(models, modelcls)
-    m = M()
     BA0 = df.loc[t0]['fake']
     FA0 = df.loc[t0]['fact']
-    try:
-        m.inity0(BA0, FA0)
-    except NotImplementedError:
+    M = getattr(models, modelcls)
+    m = M()
+    # Initialize model compartments. Fit them or not?
+    if fity0 == "all":
+        # do nothing -- all y0 will be treated as fit unknowns.
         pass
+    elif fity0 == "none":
+        # non-observables are set to zero, observables to the data
+        m.y0 = numpy.zeroes(len(m.y0))
+        m.inity0(BA0, FA0)
+    elif fity0 == "non-obs":
+        # the default: fit non-observables, set observables to the data
+        m.inity0(BA0, FA0)
+    else:
+        raise ValueError("No such option: {}".format(fity0))
+    print("Fit y0: {}".format(fity0))
     data = numpy.c_[df['fake'], df['fact']]
     m.fit(data)
     m.summary()
@@ -101,10 +118,7 @@ def fit(df, modelcls='HoaxModel'):
         print("{metric:>{width}}: {err: 6.2f}%".format(metric=metrics[metric],
                                                        width=width,
                                                        err=err))
-    t = numpy.arange(len(df))
-    fit_data = m.simulate(t)
-    fit_df = pandas.DataFrame(fit_data, columns=["fake", "fact"])
-    return fit_df, m
+    return m
 
 
 def plotone(ax, data_df, fit_df, title):
@@ -120,73 +134,83 @@ def plotone(ax, data_df, fit_df, title):
     return ax.lines
 
 
-def plot(story_df, fit_df, storyid, modelcls='HoaxModel', save_fig=False):
-    t0 = story_df.index[0]
+def plot(model, df, story):
+    t = numpy.arange(len(df))
+    fit_data = model.simulate(t)
+    fit_df = pandas.DataFrame(fit_data, columns=["fake", "fact"])
+    t0 = df.index[0]
     fig, (ax1, ax2) = plt.subplots(1, 2)
-    title = r"story {}: $t_0$ = {}".format(storyid, t0)
+    title = r"story {}: $t_0$ = {}".format(story, t0)
     fig.suptitle(title)
-    plotone(ax1, story_df['fake'], fit_df['fake'], "fake")
-    plotone(ax2, story_df['fact'], fit_df['fact'], "fact-check")
+    plotone(ax1, df['fake'], fit_df['fake'], "fake")
+    plotone(ax2, df['fact'], fit_df['fact'], "fact-check")
     plt.tight_layout()
     plt.subplots_adjust(top=0.88)
     plt.draw()
-    if save_fig:
-        output_path = OPATH.format(storyid=storyid, model=modelcls,
-                                   date=NOW.date(), hour=NOW.time(),
-                                   format='pdf')
-        plt.savefig(output_path)
-        print("Written: {}".format(output_path))
+    classname = model.__class__.__name__
+    output_path = OPATH_FIG.format(story=story, model=classname,
+                                   timestamp=NOW.isoformat())
+    plt.savefig(output_path)
+    print("Written: {}".format(output_path))
     return fig
 
 
-def mainone(path, storyid, modelcls='HoaxModel', save_fig=False,
-            save_model=False):
+def mainone(story, df, modelcls='HoaxModel', fity0="non-obs"):
     print("-" * TERM_COLS)
-    print("Story: {}".format(storyid))
+    print("Story: {}".format(story))
     tic = datetime.datetime.now()
     print("Fit started: {}".format(tic))
-    story_df = readdata(path, storyid)
-    fit_df, model = fit(story_df, modelcls=modelcls)
-    if save_model:
-        output_path = OPATH.format(storyid=storyid, model=modelcls,
-                                   date=NOW.date(), hour=NOW.time(),
-                                   format='pickle')
-        with closing(open(output_path, 'wb')) as f:
-            pickle.dump(model, f)
-            print("Written: {}".format(output_path))
-    story_df.reset_index(inplace=True)
-    plot(story_df, fit_df, storyid, modelcls=modelcls, save_fig=save_fig)
+    fitted_model = fit(df, modelcls=modelcls, fity0=fity0)
+    plot(fitted_model, df, story)
     toc = datetime.datetime.now()
     print("Fit ended: {}. Elapsed: {}.".format(toc, toc - tic))
     print("-" * TERM_COLS)
     print()
-    return toc - tic
+    return fitted_model
 
 
-def main(path, storyid, modelcls='HoaxModel', save_fig=False,
-         save_model=False):
-    print("Data: {}".format(path))
-    elapsed = datetime.timedelta(0)
+def main(path, stories=None, modelcls='HoaxModel', fity0="non-obs"):
+    tic = datetime.datetime.now()
     plt.close("all")
-    for _storyid in storyid:
-        elapsed += mainone(path, _storyid, save_fig=save_fig,
-                           save_model=save_model, modelcls=modelcls)
-    print("Elapsed (Total): {}.".format(elapsed))
+    print("Data: {}".format(path))
+    tmp = {
+        "path": path,
+        "modelcls": modelcls,
+        "created": NOW.isoformat(),
+        "models": {}
+    }
+    for story, df in readdata(path, stories=stories):
+        fitted_model = mainone(story, df, modelcls=modelcls, fity0=fity0)
+        tmp["models"][story] = fitted_model
+    output_path = OPATH_MOD.format(model=modelcls, timestamp=NOW.isoformat())
+    with closing(open(output_path, 'wb')) as f:
+        pickle.dump(tmp, f)
+        print("Written: {}".format(output_path))
+    toc = datetime.datetime.now()
+    print("All fits ended. Elapsed (Total): {}.".format(toc - tic))
     if matplotlib.is_interactive():
         plt.show()
 
 
+epilog = """
+By default, all stories in a data file will be fit. If a compartment is not
+fit, then it will be initialized as follows. If it is an observable
+compartment, it will be set to the first data point of the data; if it is a
+non-observable, it be set to zero.
+"""
+
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('path', help="Path to HDF file with data")
-    parser.add_argument('storyid', type=int, help='ID of story to plot',
-                        nargs='+')
+    parser = argparse.ArgumentParser(description=__doc__, epilog=epilog)
+    parser.add_argument('path', help="Path to CSV/HDF file with data.")
+    parser.add_argument('-s', '--story', type=int, metavar='ID',
+                        help='Fit only stories with these %(metavar)s(s)',
+                        nargs='+', dest='stories')
     parser.add_argument('-m', '--model', metavar='NAME', default='HoaxModel',
                         help='Fit model %(metavar)s [default: %(default)s]',
                         dest='modelcls', choices=AVAIL_MODELS)
-    parser.add_argument('-F', '--save-fig', action='store_true',
-                        help='save figure(s) to PDF')
-    parser.add_argument('-M', '--save-model', action='store_true',
-                        help='save model(s) to pickle')
+    parser.add_argument('-f', '--fit-y0', default="non-obs", dest='fity0',
+                        choices=["all", "none", "non-obs"],
+                        help="How to fit the vector of initial conditions "
+                        "(default: %(default)s)")
     args = parser.parse_args()
     main(**vars(args))
