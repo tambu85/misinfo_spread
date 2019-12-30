@@ -145,7 +145,7 @@ def mainone(path, storyid, modelcls='HoaxModel', save_fig=False,
             pickle.dump(model, f)
             print("Written: {}".format(output_path))
     story_df.reset_index(inplace=True)
-    plot(story_df, fit_df, storyid, save_fig=save_fig)
+    plot(story_df, fit_df, storyid, modelcls=modelcls, save_fig=save_fig)
     toc = datetime.datetime.now()
     print("Fit ended: {}. Elapsed: {}.".format(toc, toc - tic))
     print("-" * TERM_COLS)
