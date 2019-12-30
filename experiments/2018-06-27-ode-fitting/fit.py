@@ -13,6 +13,12 @@ import matplotlib.pyplot as plt
 import argparse
 from contextlib import closing
 
+# TODO
+# 1. fit all stories available in the file
+# 2. Save each plot in a separate PDF file
+# 3. Pickle all models in a dict, with name models-${DATE}.pickle
+# 4. Dump command line args object into output pickle
+
 import models
 
 # Path template
