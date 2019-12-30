@@ -79,7 +79,7 @@ class DoubleSIR(ODEModel):
         self.sir1 = SIR(**kwargs1)
         self.sir2 = SIR(**kwargs2)
 
-    @classmethod
+    @staticmethod
     def obs(y):
         """
         Returns I1 and I2
