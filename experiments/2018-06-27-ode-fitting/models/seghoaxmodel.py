@@ -34,7 +34,7 @@ class SegHoaxModel(ODEModel):
     Parameters
     ==========
         pvgu    - probability to verify in the gullible group
-        psk     - probability to verify in the skeptic group
+        pvsk     - probability to verify in the skeptic group
         tauinv  - inverse tau
         alpha   - relative strenght of the hoax
         s       - network segregation
@@ -47,7 +47,7 @@ class SegHoaxModel(ODEModel):
     integration (see `scipy.integrate.odeint`).
 
     """
-    _theta = ["pvgu", "psk", "tauinv", "alpha", "seg", "gamma"]
+    _theta = ["pvgu", "pvsk", "tauinv", "alpha", "seg", "gamma"]
 
     pvgu = Variable(lower=0, upper=1)
     pvsk = Variable(lower=0, upper=1)
@@ -92,7 +92,7 @@ class SegHoaxModel(ODEModel):
     def dy(self, y, t):
         BA_gu, FA_gu, BI_gu, FI_gu, S_gu, BA_sk, FA_sk, BI_sk, FI_sk, S_sk = y
         N = (BA_gu + BA_sk) / float(y.sum())
-        fgu = self.self.seg * self.self.gamma * BA_gu / N + (1 - self.seg) * \
+        fgu = self.seg * self.gamma * BA_gu / N + (1 - self.seg) * \
             (1 - self.gamma) * BA_sk / N
         fsk = self.seg * (1 - self.gamma) * BA_gu / N + (1 - self.seg) * \
             self.gamma * BA_sk / N
