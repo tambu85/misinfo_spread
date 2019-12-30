@@ -19,3 +19,4 @@
 - [ ] Generic test case for all models based on same idea of `test_fitting.py`;
 - [ ] Make test case with `odecomp.py`;
 - [ ] Implement Jacobian using SymPy to speed up least squares fitting;
+- [ ] Refactor `models.base.ODEModel` based on [scikit-learn API](https://scikit-learn.org/stable/developers/develop.html)
