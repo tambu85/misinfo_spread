@@ -47,7 +47,7 @@ class DoubleSIR(ODEModel):
     """
     Two independent SIR models
 
-    See `sir`.
+    See `sir.SIR`.
     """
     _theta = ["beta1", "mu1", "beta2", "mu2"]
 
