@@ -12,10 +12,10 @@
 ## Normal priority: 
 - [ ] Write k-means + PCA script for model-based clustering;
 - [ ] Do forecasting with 80-20 holdout set;
-- [ ] Create minimal environment for replication;
-- [ ] Move ode-fitting experiment under replication;
-- [ ] Create Snakemake file for replication;
 - [ ] Repeat fit on full dataset;
+- [ ] Create minimal environment for replication;
+- [ ] Move ode-fitting code under replication;
+- [ ] Create master Snakemake file for replication;
 
 ## Low priority:
 - [ ] Test `scipy.integrate.solve_ivp` as replacement for `odeint`;
