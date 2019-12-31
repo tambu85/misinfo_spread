@@ -24,4 +24,7 @@
 - [ ] Write test cases for odeint based on `test_fitting.py` (fit synthetic data);
 - [ ] Make test case based on `odecomp.py` (compare odeint with prob updating);
 - [ ] Implement Jacobian using SymPy to speed up least squares fitting;
-- [ ] Refactor `models.base.ODEModel` based on [scikit-learn API](https://scikit-learn.org/stable/developers/develop.html)
+- [ ] Refactor `models.base.ODEModel` based on [scikit-learn API](https://scikit-learn.org/stable/developers/develop.html);
+- [ ] Fix issue with `ODEModel.summary` (see FIXME in `models/base.py`)
+- [ ] Fix issue with root logger (see FIXME in `fit.py`);
+- [ ] Fix issue with `utils.logaccratio`

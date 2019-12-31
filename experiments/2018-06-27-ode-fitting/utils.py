@@ -83,6 +83,7 @@ def smape(x, y, frac=False):
         return 100 * err
 
 
+# FIXME: nan results (see HoaxModel with y0fit=none log)
 def logaccratio(x, y, frac=False):
     r"""
     Returns Log Accuracy Ratio of x relative to y. This is defined as:

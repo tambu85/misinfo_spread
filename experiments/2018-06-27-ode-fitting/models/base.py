@@ -438,7 +438,7 @@ class ODEModel(object):
             if record["value"] == -1.0:
                 one_flag = True
                 record["ast"] = "^"
-            elif record["error"] == 0.0:
+            elif record["error"] == 0.0:  # FIXME fit can yield error == 0.0
                 record["ast"] = "*"
                 ast_flag = True
             logger.info(row_template.format(**record))

@@ -15,6 +15,8 @@ from contextlib import closing
 
 import models
 
+# FIXME: do not use root logger, since it is used by other packages (e.g.
+# matplotlib). Create your own logger instance(s).
 logger = logging.getLogger()
 
 # Path template
