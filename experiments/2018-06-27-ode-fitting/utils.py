@@ -83,12 +83,15 @@ def smape(x, y, frac=False):
         return 100 * err
 
 
-# FIXME: nan results (see HoaxModel with y0fit=none log)
 def logaccratio(x, y, frac=False):
     r"""
-    Returns Log Accuracy Ratio of x relative to y. This is defined as:
+    Returns Log Accuracy Ratio of x relative to y. Based on Morley et al. [1],
+    this is defined as:
 
-    (100 / N) * \sum log(x[i] / y[i])
+    100 * exp[ median( ln(x / y) ) - 1 ]
+
+    Where ln is the natural log. This is a symmetric measure that can be
+    interpreted as a percentage error.
 
     Parameters
     ==========
@@ -97,14 +100,18 @@ def logaccratio(x, y, frac=False):
     frac : bool
         If True, return a fraction (i.e., do not multiply by 100 in the above
         formula). If False, return a percentage. (Default: False.)
+
+    References
+    ==========
+    [1] Morley et al., 2017. Measures of Model Performance Based On the Log
+    Accuracy Ratio. Space Weather 16(1), pp. 69--88. DOI: 10.1002/2017SW001669
     """
     x = numpy.ravel(x)
     y = numpy.ravel(y)
-    x_idx = (x == 0)
-    y_idx = (y == 0)
-    idx = x_idx | y_idx
-    N_nnz = len(y) - idx.sum()
-    err = numpy.log(x[~idx] / y[~idx]).sum() / float(N_nnz)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        q = x / y
+        err = numpy.exp(numpy.median(numpy.log(q)) - 1)
     if frac:
         return err
     else:
