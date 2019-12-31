@@ -11,13 +11,16 @@
 
 ## Normal priority: 
 - [ ] Write k-means + PCA script for model-based clustering;
-- [ ] Do forecasting with 80-20 holdout set;
+- [ ] Forecast y(t) (for t=12h,24h,48h,168h) with variable-size training set;
 - [ ] Repeat fit on full dataset;
-- [ ] Create minimal environment for replication;
-- [ ] Move ode-fitting code under replication;
-- [ ] Create master Snakemake file for replication;
 
 ## Low priority:
+- [ ] Fix issue with `ODEModel.summary` (see FIXME in `models/base.py`)
+- [ ] Fix issue with root logger (see FIXME in `fit.py`);
+- [ ] Fix issue with `utils.logaccratio`
+- [ ] Move ode-fitting code under replication;
+- [ ] Write Snakefile(s) for replication;
+- [ ] Create minimal environment for replication;
 - [ ] Test `scipy.integrate.solve_ivp` as replacement for `odeint`;
 - [ ] Implement more models from literature (see in `models.__init__.py`);
 - [ ] Write test cases for models.base.Variable, models.base.ODEModel;
@@ -25,6 +28,3 @@
 - [ ] Make test case based on `odecomp.py` (compare odeint with prob updating);
 - [ ] Implement Jacobian using SymPy to speed up least squares fitting;
 - [ ] Refactor `models.base.ODEModel` based on [scikit-learn API](https://scikit-learn.org/stable/developers/develop.html);
-- [ ] Fix issue with `ODEModel.summary` (see FIXME in `models/base.py`)
-- [ ] Fix issue with root logger (see FIXME in `fit.py`);
-- [ ] Fix issue with `utils.logaccratio`
