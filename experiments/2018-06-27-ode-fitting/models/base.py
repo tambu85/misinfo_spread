@@ -1,5 +1,6 @@
 import copy
 import weakref
+import logging
 import numpy
 import scipy.stats
 import scipy.integrate
@@ -7,6 +8,8 @@ import scipy.integrate
 from utils import pstderr, mape, smape, logaccratio
 
 __all__ = ['Variable', 'ODEModel']
+
+logger = logging.getLogger(__name__)
 
 
 class Variable(object):
@@ -413,18 +416,18 @@ class ODEModel(object):
             "value": max(value_widths) + 2,
             "error": max(error_widths) + 2
         }
-        print("{0}  {1}  {2}".format("=" * widths["name"],
-                                     "=" * widths["value"],
-                                     "=" * widths["error"]))
-        print("{0:^{3}}  {1:^{4}}  {2:^{5}}".format(headers["name"],
-                                                    headers["value"],
-                                                    headers["error"],
-                                                    widths["name"],
-                                                    widths["value"],
-                                                    widths["error"]))
-        print("{0}  {1}  {2}".format("=" * widths["name"],
-                                     "=" * widths["value"],
-                                     "=" * widths["error"]))
+        logger.info("{0}  {1}  {2}".format("=" * widths["name"],
+                                           "=" * widths["value"],
+                                           "=" * widths["error"]))
+        logger.info("{0:^{3}}  {1:^{4}}  {2:^{5}}".format(headers["name"],
+                                                          headers["value"],
+                                                          headers["error"],
+                                                          widths["name"],
+                                                          widths["value"],
+                                                          widths["error"]))
+        logger.info("{0}  {1}  {2}".format("=" * widths["name"],
+                                           "=" * widths["value"],
+                                           "=" * widths["error"]))
         ast_flag = False
         one_flag = False
         for record in records:
@@ -438,18 +441,18 @@ class ODEModel(object):
             elif record["error"] == 0.0:
                 record["ast"] = "*"
                 ast_flag = True
-            print(row_template.format(**record))
-        print("{0}  {1}  {2}".format("=" * widths["name"],
-                                     "=" * widths["value"],
-                                     "=" * widths["error"]))
+            logger.info(row_template.format(**record))
+            logger.info("{0}  {1}  {2}".format("=" * widths["name"],
+                                               "=" * widths["value"],
+                                               "=" * widths["error"]))
         if ast_flag:
-            print("* From data.")
+            logger.info("* From data.")
         if one_flag:
-            print("^ Value = -1.0: variable not set.")
+            logger.info("^ Value = -1.0: variable not set.")
         if ast_flag or one_flag:
-            print("{0}  {1}  {2}".format("=" * widths["name"],
-                                         "=" * widths["value"],
-                                         "=" * widths["error"]))
+            logger.info("{0}  {1}  {2}".format("=" * widths["name"],
+                                               "=" * widths["value"],
+                                               "=" * widths["error"]))
 
     def error(self, data, times=None, metric='mape'):
         """

@@ -1,6 +1,5 @@
 """ Fit an O.D.E. model to empirical data. """
 
-from __future__ import print_function
 import os
 import sys
 import re
@@ -11,11 +10,15 @@ import pandas
 import matplotlib
 import matplotlib.pyplot as plt
 import argparse
+import logging
 from contextlib import closing
 
 import models
 
+logger = logging.getLogger(__name__)
+
 # Path template
+OPATH_LOG = '{model}-{timestamp}.log'
 OPATH_MOD = 'models-{model}-{timestamp}.pickle'
 OPATH_FIG = 'fig-{model}-{timestamp}-{story:02d}.pdf'
 
@@ -103,7 +106,7 @@ def fit(df, modelcls='HoaxModel', fity0="non-obs"):
         m.inity0(BA0, FA0)
     else:
         raise ValueError("No such option: {}".format(fity0))
-    print("Fit y0: {}".format(fity0))
+    logger.info("Fit y0: {}".format(fity0))
     data = numpy.c_[df['fake'], df['fact']]
     m.fit(data)
     m.summary()
@@ -113,11 +116,10 @@ def fit(df, modelcls='HoaxModel', fity0="non-obs"):
         "logaccratio": "LOG ACC. RATIO"
     }
     width = max(map(len, metrics.values()))
+    s = "{metric:>{width}}: {err: 6.2f}%"
     for metric in metrics:
         err = m.error(data, metric=metric)
-        print("{metric:>{width}}: {err: 6.2f}%".format(metric=metrics[metric],
-                                                       width=width,
-                                                       err=err))
+        logger.info(s.format(metric=metrics[metric], width=width, err=err))
     return m
 
 
@@ -151,31 +153,37 @@ def plot(model, df, story):
     output_path = OPATH_FIG.format(story=story, model=classname,
                                    timestamp=NOW.isoformat())
     plt.savefig(output_path)
-    print("Written: {}".format(output_path))
+    logger.info("Written: {}".format(output_path))
     return fig
 
 
 def mainone(story, df, modelcls='HoaxModel', fity0="non-obs"):
-    print("-" * TERM_COLS)
-    print("Story: {}".format(story))
+    logger.info("-" * TERM_COLS)
+    logger.info("Story: {}".format(story))
     tic = datetime.datetime.now()
-    print("Fit started: {}".format(tic))
+    logger.info("Fit started: {}".format(tic))
     fitted_model = fit(df, modelcls=modelcls, fity0=fity0)
     plot(fitted_model, df, story)
     toc = datetime.datetime.now()
-    print("Fit ended: {}. Elapsed: {}.".format(toc, toc - tic))
-    print("-" * TERM_COLS)
-    print()
+    logger.info("Fit ended: {}. Elapsed: {}.".format(toc, toc - tic))
+    logger.info("-" * TERM_COLS)
+    logger.info()
     return fitted_model
 
 
 def main(path, stories=None, modelcls='HoaxModel', fity0="non-obs", seed=None):
+    log_path = OPATH_LOG.format(model=modelcls, timestamp=NOW.isoformat())
+    logging.basicConfig(filename=log_path, level=logging.DEBUG)
+    logging.captureWarnings(True)
+    console = logging.StreamHandler()
+    console.setLevel(logging.INFO)
+    logging.getLogger(__name__).addHandler(console)
     if seed is not None:
         numpy.random.seed(seed)
-        print("PRNG Seed: {}".format(seed))
+        logger.info("PRNG Seed: {}".format(seed))
     tic = datetime.datetime.now()
     plt.close("all")
-    print("Data: {}".format(path))
+    logger.info("Data: {}".format(path))
     tmp = {
         "path": path,
         "modelcls": modelcls,
@@ -188,9 +196,9 @@ def main(path, stories=None, modelcls='HoaxModel', fity0="non-obs", seed=None):
     output_path = OPATH_MOD.format(model=modelcls, timestamp=NOW.isoformat())
     with closing(open(output_path, 'wb')) as f:
         pickle.dump(tmp, f)
-        print("Written: {}".format(output_path))
+        logger.info("Written: {}".format(output_path))
     toc = datetime.datetime.now()
-    print("All fits ended. Elapsed (Total): {}.".format(toc - tic))
+    logger.info("All fits ended. Elapsed (Total): {}.".format(toc - tic))
     if matplotlib.is_interactive():
         plt.show()
 
