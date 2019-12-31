@@ -188,7 +188,9 @@ class ODEModel(object):
     def __call__(self, y, t):
         dy = self.dy(y, t)
         z = numpy.sum(dy)
-        assert numpy.isclose(z, 0), "sum(dy) does not cancel out: {}".format(z)
+        if not numpy.isclose(z, 0):
+            import warnings
+            warnings.warn("sum(dy) does not cancel out: {}".format(z))
         return dy
 
     def predict(self, times, full=False, **kwargs):
