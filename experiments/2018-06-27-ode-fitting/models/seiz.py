@@ -4,6 +4,9 @@ from models.base import ODEModel, Variable
 
 __all__ = ['SEIZ']
 
+# Number of steps of scipy.integrate.odeint
+MXSTEP = 5_000
+
 
 class SEIZ(ODEModel):
     """
@@ -55,6 +58,11 @@ class SEIZ(ODEModel):
         Return I and Z
         """
         return y[:, 2:]
+
+    def simulate(self, times, full=False, **kwargs):
+        _mxstep = kwargs.get('mxstep', 0)
+        kwargs.update({'mxstep': max(MXSTEP, _mxstep)})
+        return super(SEIZ, self).simulate(times, full=full, **kwargs)
 
     def inity0(self, I, Z):
         self.I = I  # noqa

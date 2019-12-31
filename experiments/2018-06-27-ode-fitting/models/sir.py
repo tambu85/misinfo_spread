@@ -4,6 +4,9 @@ from models.base import ODEModel, Variable
 
 __all__ = ['SIR', 'DoubleSIR']
 
+# Number of steps of scipy.integrate.odeint
+MXSTEP = 5_000
+
 
 class SIR(ODEModel):
     """
@@ -85,6 +88,11 @@ class DoubleSIR(ODEModel):
         Returns I1 and I2
         """
         return y[:, [1, 4]]
+
+    def simulate(self, times, full=False, **kwargs):
+        _mxstep = kwargs.get('mxstep', 0)
+        kwargs.update({'mxstep': max(MXSTEP, _mxstep)})
+        return super(DoubleSIR, self).simulate(times, full=full, **kwargs)
 
     def inity0(self, I1, I2):
         self.I1 = I1
