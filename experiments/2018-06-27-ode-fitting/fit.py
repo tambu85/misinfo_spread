@@ -169,7 +169,10 @@ def mainone(story, df, modelcls='HoaxModel', fity0="non-obs"):
     return fitted_model
 
 
-def main(path, stories=None, modelcls='HoaxModel', fity0="non-obs"):
+def main(path, stories=None, modelcls='HoaxModel', fity0="non-obs", seed=None):
+    if seed is not None:
+        numpy.random.seed(seed)
+        print("PRNG Seed: {}".format(seed))
     tic = datetime.datetime.now()
     plt.close("all")
     print("Data: {}".format(path))
@@ -212,5 +215,6 @@ if __name__ == '__main__':
                         choices=["all", "none", "non-obs"],
                         help="How to fit the vector of initial conditions "
                         "(default: %(default)s)")
+    parser.add_argument('-S', '--seed', type=int, help='PRNG seed')
     args = parser.parse_args()
     main(**vars(args))
