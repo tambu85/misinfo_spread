@@ -9,7 +9,7 @@ from utils import pstderr, mape, smape, logaccratio
 
 __all__ = ['Variable', 'ODEModel']
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger()
 
 
 class Variable(object):
@@ -442,9 +442,9 @@ class ODEModel(object):
                 record["ast"] = "*"
                 ast_flag = True
             logger.info(row_template.format(**record))
-            logger.info("{0}  {1}  {2}".format("=" * widths["name"],
-                                               "=" * widths["value"],
-                                               "=" * widths["error"]))
+        logger.info("{0}  {1}  {2}".format("=" * widths["name"],
+                                           "=" * widths["value"],
+                                           "=" * widths["error"]))
         if ast_flag:
             logger.info("* From data.")
         if one_flag:

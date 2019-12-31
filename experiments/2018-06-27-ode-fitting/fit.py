@@ -15,7 +15,7 @@ from contextlib import closing
 
 import models
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger()
 
 # Path template
 OPATH_LOG = '{model}-{timestamp}.log'
@@ -167,17 +167,20 @@ def mainone(story, df, modelcls='HoaxModel', fity0="non-obs"):
     toc = datetime.datetime.now()
     logger.info("Fit ended: {}. Elapsed: {}.".format(toc, toc - tic))
     logger.info("-" * TERM_COLS)
-    logger.info()
     return fitted_model
 
 
 def main(path, stories=None, modelcls='HoaxModel', fity0="non-obs", seed=None):
     log_path = OPATH_LOG.format(model=modelcls, timestamp=NOW.isoformat())
-    logging.basicConfig(filename=log_path, level=logging.DEBUG)
+    logging.basicConfig(filename=log_path, level=logging.INFO,
+                        format='%(asctime)s: %(message)s')
     logging.captureWarnings(True)
     console = logging.StreamHandler()
+    formatter = logging.Formatter('%(message)s')
     console.setLevel(logging.INFO)
-    logging.getLogger(__name__).addHandler(console)
+    console.setFormatter(formatter)
+    logging.getLogger().addHandler(console)
+    logger.info("Logging to: {}".format(log_path))
     if seed is not None:
         numpy.random.seed(seed)
         logger.info("PRNG Seed: {}".format(seed))
