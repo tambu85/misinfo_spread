@@ -4,6 +4,9 @@ from models.base import ODEModel, Variable
 
 __all__ = ['SegHoaxModel']
 
+# Number of steps of scipy.integrate.odeint
+MXSTEP = 5_000
+
 
 class SegHoaxModel(ODEModel):
     """
@@ -88,6 +91,11 @@ class SegHoaxModel(ODEModel):
         y_gu = y[:, :2]  # BA_gu, FA_gu
         y_sk = y[:, 5:7]  # BA_sk, FA_sk
         return y_gu + y_sk
+
+    def simulate(self, times, full=False, **kwargs):
+        _mxstep = kwargs.get('mxstep', 0)
+        kwargs.update({'mxstep': max(MXSTEP, _mxstep)})
+        return super(SegHoaxModel, self).simulate(times, full=full, **kwargs)
 
     def inity0(self, BA, FA):
         self.BA_gu = BA
