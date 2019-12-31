@@ -188,7 +188,9 @@ def main(path, stories=None, modelcls='HoaxModel', fity0="non-obs", seed=None):
     plt.close("all")
     logger.info("Data: {}".format(path))
     tmp = {
-        "path": path,
+        "seed": seed,
+        "fity0": fity0,
+        "path": os.path.abspath(path),
         "modelcls": modelcls,
         "created": NOW.isoformat(),
         "models": {}
