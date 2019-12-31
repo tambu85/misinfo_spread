@@ -3,7 +3,7 @@
 ## High priority:
 - [X] Run fit with --fity0=non-obs on HoaxModel;
 - [X] Run fit with --fity0=all on HoaxModel;
-- [ ] Run fit with --fity0=none on HoaxModel;
+- [X] Run fit with --fity0=none on HoaxModel;
 - [ ] Compare results of fity0 alternatives and decide what is best option;
 - [ ] Investigate odeint instabilities on SegHoaxModel, DoubleSIR, SEIZ (fit synth data);
 - [ ] Run fit for all models on simplified dataset;
