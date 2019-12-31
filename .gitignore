@@ -8,3 +8,7 @@
 
 # vim swap files
 .*.swp
+
+# Ignore anything in output folder except the README
+output/*
+!output/README.md
