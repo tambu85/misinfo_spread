@@ -99,7 +99,7 @@ def fit(df, modelcls='HoaxModel', fity0="non-obs"):
         pass
     elif fity0 == "none":
         # non-observables are set to zero, observables to the data
-        m.y0 = numpy.zeroes(len(m.y0))
+        m.y0 = numpy.zeros(len(m.y0))
         m.inity0(BA0, FA0)
     elif fity0 == "non-obs":
         # the default: fit non-observables, set observables to the data
