@@ -11,13 +11,13 @@
 
 ## Normal priority: 
 - [ ] Write k-means + PCA script for model-based clustering;
-- [ ] Forecast y(t) (for t=12h,24h,48h,168h) with variable-size training set;
+- [ ] Forecast y(t) (for t=12h,24h,48h,168h) with variable-size training sebt;
 - [ ] Repeat fit on full dataset;
 
 ## Low priority:
 - [ ] Fix issue with `ODEModel.summary` (see FIXME in `models/base.py`)
 - [ ] Fix issue with root logger (see FIXME in `fit.py`);
-- [ ] Fix issue with `utils.logaccratio`
+- [X] Fix issue with `utils.logaccratio`
 - [ ] Move ode-fitting code under replication;
 - [ ] Write Snakefile(s) for replication;
 - [ ] Create minimal environment for replication;
