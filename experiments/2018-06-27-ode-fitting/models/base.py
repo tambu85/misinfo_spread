@@ -245,6 +245,20 @@ class ODEModel(object):
                 tmp.append((lower, upper))
         return tmp
 
+    def _genparams(self, nrep):
+        """
+        Generate parameters at random.
+        """
+        bounds = self._getbounds()
+        lower_bounds, upper_bounds = zip(*bounds)
+        size = (nrep, len(bounds))
+        loc = lower_bounds
+        scale = numpy.asarray(upper_bounds) - numpy.asarray(lower_bounds)
+        x0seq = scipy.stats.uniform.rvs(loc, scale, size)
+        idx = numpy.isinf(x0seq)
+        x0seq[idx] = numpy.broadcast_to(lower_bounds, x0seq.shape)[idx] + 1.0
+        return x0seq
+
     def _assign(self, x, fitted=False):
         """
         Assign missing values to a model. If fitted is True, also set
@@ -332,13 +346,8 @@ class ODEModel(object):
         self.times = times
         if x0 is None:
             # Draw x0 at random from bounds. If any unknown is unconstrained,
-            # set the initial guess to 1.0 (a safe value).
-            size = (nrep, len(bounds))
-            loc = lower_bounds
-            scale = numpy.asarray(upper_bounds) - numpy.asarray(lower_bounds)
-            x0seq = scipy.stats.uniform.rvs(loc, scale, size)
-            idx = numpy.isinf(x0seq)
-            x0seq[idx] = 1.0
+            # set the initial guess to lower + 1.0 (a safe value).
+            x0seq = self._genparams(nrep)
         else:
             # Use provided x0 for all repetitions
             x0seq = (x0 for i in range(nrep))
