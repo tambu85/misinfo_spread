@@ -74,8 +74,8 @@ class SEIZ(ODEModel):
         dS = - self.beta * I * S / N - self.b * Z * S / N
         dE = (1.0 - self.p) * self.beta * I * S / N + (1.0 - self.l) * \
             self.b * Z * S / N - self.rho * E * I / N - self.epsilon * E
-        dI = self.p * self.beta * I * S / N + (1.0 - self.l) * \
-            self.b * Z * S / N - self.rho * E * I / N + self.epsilon * E
+        dI = self.p * self.beta * I * S / N + self.rho * E * I / N + \
+            self.epsilon * E
         dZ = self.l * self.b * S * Z / N
         dy = [dS, dE, dI, dZ]
         return dy
