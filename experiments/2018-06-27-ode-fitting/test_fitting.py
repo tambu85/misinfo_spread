@@ -1,22 +1,38 @@
+""" Fit synthetic data """
+
+import os
+import sys
+import logging
 import numpy
 import scipy
+# import matplotlib
 import matplotlib.pyplot as plt
 
-from models.hoaxmodel import HoaxModel
+import models
 
+# replace printing with logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s: %(message)s')
+logging.captureWarnings(True)
+logger = logging.getLogger(__name__)
+print = logger.info
 
-def printparams(xopt, xerr=None, names=None):
-    if names is None:
-        names = [str(i) for i in range(len(xopt))]
-    tw = max(map(len, names))
-    names = [n.rjust(tw) for n in names]
-    if xerr is not None:
-        for n, xo, xe in zip(names, xopt, xerr):
-            print("{}: {:.2e} +/- {:.2e}".format(n, xo, xe))
-    else:
-        for n, xo in zip(names, xopt):
-            print("{}: {:.2e}".format(n, xo))
-    print()
+# Find out terminal size
+py_vers = sys.version_info
+if py_vers.major >= 3 and py_vers.minor >= 3:
+    import shutil
+    # on Python 3.3+ use os.get_terminal_size
+    TERM_COLS = shutil.get_terminal_size().columns
+elif os.name is "posix":
+    # if that's not available ...
+    # ... on Linux/Unix use stty to get terminal size
+    import subprocess
+    result = subprocess.getoutput("stty size")
+    _, TERM_COLS = map(int, result.split())
+else:
+    # ... on Windows assume default of 80 columns
+    TERM_COLS = 80
+
+TERM_COLS -= 25  # length of timestamp
 
 
 def plot(fig, model, times, data=None, **kwargs):
@@ -34,60 +50,101 @@ def plot(fig, model, times, data=None, **kwargs):
     axs[0].legend()
 
 
-if __name__ == '__main__':
-    # For reproducibility. Change seed to get different random numbers.
-    numpy.random.seed(214)
+def gentheta(model, nrep):
+    return model._genparams(nrep)[:, :len(model._theta)]
 
-    # Model parameters
-    m = HoaxModel(pv=0.1, tauinv=0.01, alpha=0.5)
 
-    m.FA = m.FI = m.BI = 0
-    m.S = 9000
-    m.BA = 1000
-
-    # The true parameter values
-    printparams(m.theta, names=m._theta)
-    printparams(m.y0, names=m._y0)
-
+def gendata(model, tmax=168, sigma=50, p_outliers=0.1, outlier_mult=10):
     # Vector of integration time steps
-    tmax = 168
     t = numpy.arange(tmax)
 
     # Generate data by simulating the ODE and applying Gaussian noise with
     # given sigma.
-    sigma = 50
-    y = m.simulate(t)
+    y = model.simulate(t)
     yerr = scipy.stats.norm.rvs(scale=sigma, size=y.shape)
 
     # Add a fraction of outliers to simulate noisy tweet counts.
-    p_outliers = 0.1
     n_outliers = int(len(t) * p_outliers)
     idx = numpy.random.choice(len(t), n_outliers, replace=False)
-    yerr[idx] *= 10
+    yerr[idx] *= outlier_mult
 
     # Add noise to simulated data. Finally, clip negative values to zero, to
     # simulate count data.
     data = y + yerr
     data = data.clip(min=0)
+    return t, data
 
-    # Scenario 1) Fit unknowns = model parameter (theta) + initial conditions
-    # (y0). All fits are best of three (3) attempts.
-    m1 = HoaxModel()
+
+def main(modelcls='HoaxModel', seed=None):
+    # For reproducibility. Change seed to get different random numbers.
+    numpy.random.seed(seed)
+
+    M = getattr(models, modelcls)
+
+    # Model parameters
+    m = M()
+
+    # m.theta = gentheta(m, 1)[0]
+    # m = M(pv=0.1, tauinv=0.01, alpha=0.5)
+    m = M(pvsk=0.1, pvgu=0.001, seg=0.75, gamma=0.5, tauinv=0.01, alpha=0.5)
+
+    m.y0 = numpy.zeros(len(m.y0))
+    # m.S = 9000
+    # m.BA = 1000
+    m.S_sk = 4500
+    m.S_gu = 4500
+    m.BA_sk = 500
+    m.BA_gu = 500
+
+    # The true parameter values
+    m.summary()
+
+    # generate synthentic data with noise + outliers
+    t, data = gendata(m)
+
+    # Scenario 1) All: Fit unknowns = model parameter (theta) + initial
+    # conditions (y0). All fits are best of three (3) attempts.
+    print("=" * TERM_COLS)
+    print("1) Fitting: All")
+    m1 = M()
     m1.fit(data, nrep=3)
-    print("1) MAPE = {:2f}%".format(m1.error(data)))
+    m1.summary()
+    print("RMSE = {:2f}".format(m1.error(data, metric='rmse')))
 
-    # Scenario 2) Like 1), but only BI0/FI0/S0 are unknown initial conditions.
-    # BA0/FA0 are known and they are equal to the first observation of the
-    # data.
-    m2 = HoaxModel()
-    m2.BA, m2.FA = data[0]
+    # Scenario 2) Non-Obs: Like 1), but only BI0/FI0/S0 are unknown initial
+    # conditions. BA0/FA0 are known and they are equal to the first observation
+    # of the data.
+    print("=" * TERM_COLS)
+    print("2) Fitting: Non-Obs")
+    m2 = M()
+    m2.inity0(data[0, 0], data[0, 1])
     m2.fit(data, nrep=3)
-    print("2) MAPE = {:2f}%".format(m2.error(data)))
+    m2.summary()
+    print("RMSE = {:2f}".format(m2.error(data, metric='rmse')))
+
+    # Scenario 3) None: BI0/FI0/S0 = 0; BA0/FA0 = first observation of the
+    # data.
+    print("=" * TERM_COLS)
+    print("3) Fitting: None")
+    m3 = M()
+    m3.y0 = numpy.zeros(len(m3.y0))
+    m3.inity0(data[0, 0], data[0, 1])
+    m3.fit(data, nrep=3)
+    m3.summary()
+    print("RMSE = {:2f}".format(m3.error(data, metric='rmse')))
 
     # Plot true model, data, and fitted models.
     fig, axs = plt.subplots(1, 2)
     plot(fig, m, t, data, label='True', ls='-', lw=2)
-    plot(fig, m1, t, label='Fit #1 (all unknowns)', ls='--')
-    plot(fig, m2, t, label='Fit #2 (BA0/FA0 from data)', ls='--')
+    plot(fig, m1, t, label='Fit #1 All', ls='--')
+    plot(fig, m2, t, label='Fit #2 Non-Obs', ls='-.')
+    plot(fig, m3, t, label='Fit #3 None', ls=':')
+
     plt.show()
     plt.tight_layout()
+
+
+if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser(description=__doc__)
+    main(seed=214, modelcls='SegHoaxModel')
