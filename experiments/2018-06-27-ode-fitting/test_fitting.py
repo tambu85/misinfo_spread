@@ -93,12 +93,13 @@ def main(config_path, modelcls='HoaxModel', seed=None):
 
     # Model parameters
     m = M()
+    m.y0 = numpy.zeros(len(m.y0))
 
     # Read parameters from config file
     conf_section = parser[modelcls]
     for k in conf_section.keys():
-        val = conf_section.get_float(k)
-        setattr(M, k, val)
+        val = conf_section.getfloat(k)
+        setattr(m, k, val)
 
     # The true parameter values
     m.summary()
@@ -155,7 +156,7 @@ if __name__ == '__main__':
                         metavar='path')
     parser.add_argument('-m', '--model', default='HoaxModel',
                         help='Model to choose [default: %(default)s]',
-                        choices=AVAIL_MODELS)
+                        choices=AVAIL_MODELS, dest='modelcls')
     parser.add_argument('-S', '--seed', type=int, help='PRNG seed')
     args = parser.parse_args()
     main(**vars(args))
