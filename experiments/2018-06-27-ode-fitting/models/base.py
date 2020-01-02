@@ -459,8 +459,8 @@ class ODEModel(object):
         Model prediction error.
 
         metric : str
-            Error metric to use. It can be "mape", "smape", "logaccratio".
-            Default: mape.
+            Error metric to use. It can be "mape", "smape", "logaccratio", and
+            "rmse". Default: mape.
         """
         if times is None:
             times = numpy.arange(len(data))
@@ -471,5 +471,7 @@ class ODEModel(object):
             return smape(y, data)
         elif metric == 'logaccratio':
             return logaccratio(y, data)
+        elif metric == 'rmse':
+            return numpy.sqrt(self.cost_)
         else:
             raise ValueError("No such metric: {}".format(metric))
