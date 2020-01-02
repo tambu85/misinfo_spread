@@ -6,18 +6,20 @@
 - [X] Run fit with --fity0=none on HoaxModel;
 - [X] Compare results of fity0 alternatives and decide what is best option;
 - [ ] Investigate odeint instabilities on SegHoaxModel, DoubleSIR, SEIZ (fit synth data);
-- [ ] Run fit for all models on simplified dataset;
+- [ ] Run fit for all models;
 - [ ] Plot MAPE/SMAPE/LOG ACC RATIO/RMSE to do model selection;
 
 ## Normal priority: 
 - [ ] Write k-means + PCA script for model-based clustering;
 - [ ] Forecast y(t) (for t=12h,24h,48h,168h) with variable-size training sebt;
-- [ ] Repeat fit on full dataset;
+- [ ] Repeat fit on the full dataset;
 
 ## Low priority:
+- [ ] Repeat fit number of tweets instead of number of users;
 - [ ] Fix issue with `ODEModel.summary` (see FIXME in `models/base.py`)
 - [ ] Fix issue with root logger (see FIXME in `fit.py`);
 - [X] Fix issue with `utils.logaccratio`
+- [ ] Fix issue with missing data folder for package (see FIXME in `fit.py`).
 - [ ] Move ode-fitting code under replication;
 - [ ] Write Snakefile(s) for replication;
 - [ ] Create minimal environment for replication;
