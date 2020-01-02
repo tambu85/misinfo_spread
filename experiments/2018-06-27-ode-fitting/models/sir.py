@@ -27,8 +27,8 @@ class SIR(ODEModel):
     """
     _theta = ["beta", "mu"]
 
-    beta = Variable(lower=0, upper=1)  # XXX upper?
-    mu = Variable(lower=0, upper=1)  # XXX upper?
+    beta = Variable(lower=0)
+    mu = Variable(lower=0)
 
     _y0 = ["S", "I", "R"]
 
@@ -54,10 +54,10 @@ class DoubleSIR(ODEModel):
     """
     _theta = ["beta1", "mu1", "beta2", "mu2"]
 
-    beta1 = Variable(lower=0, upper=1)  # XXX upper?
-    mu1 = Variable(lower=0, upper=1)  # XXX upper?
-    beta2 = Variable(lower=0, upper=1)  # XXX upper?
-    mu2 = Variable(lower=0, upper=1)  # XXX upper?
+    beta1 = Variable(lower=0)
+    mu1 = Variable(lower=0)
+    beta2 = Variable(lower=0)
+    mu2 = Variable(lower=0)
 
     _y0 = ["S1", "I1", "R1", "S2", "I2", "R2"]
 

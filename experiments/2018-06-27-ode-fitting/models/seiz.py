@@ -38,12 +38,12 @@ class SEIZ(ODEModel):
     """
     _theta = ["rho", "l", "b", "beta", "p", "epsilon"]
 
-    rho = Variable(lower=0, upper=1)  # XXX upper?
+    rho = Variable(lower=0)
     l = Variable(lower=0, upper=1)  # noqa
-    b = Variable(lower=0, upper=1)  # XXX upper?
-    beta = Variable(lower=0, upper=1)  # XXX upper?
-    p = Variable(lower=0, upper=1)  # XXX upper?
-    epsilon = Variable(lower=0, upper=1)  # XXX upper?
+    b = Variable(lower=0)
+    beta = Variable(lower=0)
+    p = Variable(lower=0, upper=1)
+    epsilon = Variable(lower=0)
 
     _y0 = ["S", "E", "I", "Z"]
 
