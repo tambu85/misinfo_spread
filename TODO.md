@@ -5,8 +5,8 @@
 - [X] Run fit with --fity0=all on HoaxModel;
 - [X] Run fit with --fity0=none on HoaxModel;
 - [X] Compare results of fity0 alternatives and decide what is best option;
-- [ ] Investigate odeint instabilities on SegHoaxModel, DoubleSIR, SEIZ (fit synth data);
-- [ ] Run fit for all models;
+- [X] Investigate odeint instabilities on SegHoaxModel, DoubleSIR, SEIZ (fit synth data);
+- [ ] Run fit for all models (fity0 = all);
 - [ ] Plot MAPE/SMAPE/LOG ACC RATIO/RMSE to do model selection;
 
 ## Normal priority: 
