@@ -3,6 +3,7 @@
 import os
 import sys
 import logging
+import configparser
 import numpy
 import scipy
 # import matplotlib
@@ -33,6 +34,12 @@ else:
     TERM_COLS = 80
 
 TERM_COLS -= 25  # length of timestamp
+
+# Used by cmd line parser
+AVAIL_MODELS = [v.__name__ for v in models.__dict__.values()
+                if isinstance(v, type) and issubclass(v, models.ODEModel)]
+# The base class -- cannot be chosen
+AVAIL_MODELS.remove('ODEModel')
 
 
 def plot(fig, model, times, data=None, **kwargs):
@@ -75,26 +82,23 @@ def gendata(model, tmax=168, sigma=50, p_outliers=0.1, outlier_mult=10):
     return t, data
 
 
-def main(modelcls='HoaxModel', seed=None):
+def main(config_path, modelcls='HoaxModel', seed=None):
     # For reproducibility. Change seed to get different random numbers.
     numpy.random.seed(seed)
+    parser = configparser.ConfigParser()
+    parser.optionxform = str
+    parser.read(config_path)
 
     M = getattr(models, modelcls)
 
     # Model parameters
     m = M()
 
-    # m.theta = gentheta(m, 1)[0]
-    # m = M(pv=0.1, tauinv=0.01, alpha=0.5)
-    m = M(pvsk=0.1, pvgu=0.001, seg=0.75, gamma=0.5, tauinv=0.01, alpha=0.5)
-
-    m.y0 = numpy.zeros(len(m.y0))
-    # m.S = 9000
-    # m.BA = 1000
-    m.S_sk = 4500
-    m.S_gu = 4500
-    m.BA_sk = 500
-    m.BA_gu = 500
+    # Read parameters from config file
+    conf_section = parser[modelcls]
+    for k in conf_section.keys():
+        val = conf_section.get_float(k)
+        setattr(M, k, val)
 
     # The true parameter values
     m.summary()
@@ -147,4 +151,11 @@ def main(modelcls='HoaxModel', seed=None):
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser(description=__doc__)
-    main(seed=214, modelcls='SegHoaxModel')
+    parser.add_argument('config_path', help='path to config file',
+                        metavar='path')
+    parser.add_argument('-m', '--model', default='HoaxModel',
+                        help='Model to choose [default: %(default)s]',
+                        choices=AVAIL_MODELS)
+    parser.add_argument('-S', '--seed', type=int, help='PRNG seed')
+    args = parser.parse_args()
+    main(**vars(args))
