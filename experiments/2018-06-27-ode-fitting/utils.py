@@ -70,13 +70,12 @@ def smape(x, y, frac=False):
     """
     x = numpy.ravel(x)
     y = numpy.ravel(y)
-    N = len(y)
-    num = numpy.abs(x - y)
-    den = numpy.abs(x) + numpy.abs(y)
-    N_nnz = N - (den == 0).sum()
+    num = x - y
+    den = (x + y) / 2.0
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        err = numpy.nansum(num / den) / float(N_nnz)
+        err = numpy.abs(num / den)
+    err = numpy.nanmean(err)
     if frac:
         return err
     else:
@@ -105,13 +104,24 @@ def logaccratio(x, y, frac=False):
     ==========
     [1] Morley et al., 2017. Measures of Model Performance Based On the Log
     Accuracy Ratio. Space Weather 16(1), pp. 69--88. DOI: 10.1002/2017SW001669
+
+    Note
+    ====
+    An error will be thrown if the ratio x / y is negative.
     """
     x = numpy.ravel(x)
     y = numpy.ravel(y)
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        q = x / y
-        err = numpy.exp(numpy.median(numpy.log(q)) - 1)
+    idx = x > y
+    _x = numpy.where(idx, x, y)
+    _y = numpy.where(idx, y, x)
+    idx = numpy.isclose(_y, 0)
+    _x = _x[~idx]
+    _y = _y[~idx]
+    q = _x / _y
+    assert (q >= 0).all(), "Invalid negative ratio"
+    q = numpy.abs(numpy.log(q))
+    med = numpy.nanmedian(q)
+    err = numpy.exp(med) - 1
     if frac:
         return err
     else:
