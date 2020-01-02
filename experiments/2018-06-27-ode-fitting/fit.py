@@ -192,7 +192,8 @@ def main(path, stories=None, modelcls='HoaxModel', fity0="non-obs", seed=None):
     tmp = {
         "seed": seed,
         "fity0": fity0,
-        "path": os.path.abspath(path),
+        # relative path from user folder. FIXME Define data folder for package.
+        "path": os.path.relpath(path, start=os.path.expanduser('~')),
         "modelcls": modelcls,
         "created": NOW.isoformat(),
         "models": {}
