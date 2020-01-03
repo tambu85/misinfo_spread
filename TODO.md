@@ -3,7 +3,7 @@
 Legend:
 ```
 - [X] Task       = done
-- [+] ~~Task~~   = won't fix
+- [X] ~~Task~~   = won't fix
 ```
 
 ## High priority:
@@ -29,10 +29,10 @@ Legend:
 - [ ] Move ode-fitting code under replication;
 - [ ] Write Snakefile(s) for replication;
 - [ ] Create minimal environment for replication;
-- [+] ~~Test `scipy.integrate.solve_ivp` as replacement for `odeint`;~~
+- [X] ~~Test `scipy.integrate.solve_ivp` as replacement for `odeint`;~~
 - [ ] Implement more models from literature (see in `models.__init__.py`);
 - [ ] Write test cases for models.base.Variable, models.base.ODEModel;
 - [ ] Write test cases for odeint based on `test_fitting.py` (fit synthetic data);
 - [ ] Make test case based on `odecomp.py` (compare odeint with prob updating);
-- [+] ~~Implement Jacobian using SymPy to speed up least squares fitting;~~
+- [X] ~~Implement Jacobian using SymPy to speed up least squares fitting;~~
 - [ ] Refactor `models.base.ODEModel` based on [scikit-learn API](https://scikit-learn.org/stable/developers/develop.html);
