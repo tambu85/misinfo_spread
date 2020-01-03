@@ -118,7 +118,6 @@ def logaccratio(x, y, frac=False):
     _x = _x[~idx]
     _y = _y[~idx]
     q = _x / _y
-    assert (q >= 0).all(), "Invalid negative ratio"
     q = numpy.abs(numpy.log(q))
     med = numpy.nanmedian(q)
     err = numpy.exp(med) - 1
