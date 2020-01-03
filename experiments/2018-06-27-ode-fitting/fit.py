@@ -111,18 +111,23 @@ def fit(df, modelcls='HoaxModel', fity0="non-obs"):
     logger.info("Fit y0: {}".format(fity0))
     data = numpy.c_[df['fake'], df['fact']]
     m.fit(data)
+    return m
+
+
+def report(df, m):
+    data = numpy.c_[df['fake'], df['fact']]
     m.summary()
     metrics = {
         "mape": "MAPE",
         "smape": "SMAPE",
-        "logaccratio": "LOG ACC. RATIO"
+        "logaccratio": "LOG ACC. RATIO",
+        "rmse": "RMSE"
     }
     width = max(map(len, metrics.values()))
     s = "{metric:>{width}}: {err: 6.2f}%"
     for metric in metrics:
         err = m.error(data, metric=metric)
         logger.info(s.format(metric=metrics[metric], width=width, err=err))
-    return m
 
 
 def plotone(ax, data_df, fit_df, title):
@@ -165,11 +170,18 @@ def mainone(story, df, modelcls='HoaxModel', fity0="non-obs"):
     tic = datetime.datetime.now()
     logger.info("Fit started: {}".format(tic))
     fitted_model = fit(df, modelcls=modelcls, fity0=fity0)
-    plot(fitted_model, df, story)
-    toc = datetime.datetime.now()
-    logger.info("Fit ended: {}. Elapsed: {}.".format(toc, toc - tic))
-    logger.info("-" * TERM_COLS)
-    return fitted_model
+    try:
+        report(df, fitted_model)
+        plot(fitted_model, df, story)
+        return fitted_model
+    except Exception:
+        logger.exception("Caught exception while reporting/plotting:")
+    finally:
+        # return fitted model no matter what
+        toc = datetime.datetime.now()
+        logger.info("Fit ended: {}. Elapsed: {}.".format(toc, toc - tic))
+        logger.info("-" * TERM_COLS)
+        return fitted_model
 
 
 def main(path, stories=None, modelcls='HoaxModel', fity0="non-obs", seed=None):
@@ -199,8 +211,11 @@ def main(path, stories=None, modelcls='HoaxModel', fity0="non-obs", seed=None):
         "models": {}
     }
     for story, df in readdata(path, stories=stories):
-        fitted_model = mainone(story, df, modelcls=modelcls, fity0=fity0)
-        tmp["models"][story] = fitted_model
+        try:
+            fitted_model = mainone(story, df, modelcls=modelcls, fity0=fity0)
+            tmp["models"][story] = fitted_model
+        except Exception:
+            logger.exception("Exception on story {}:".format(story))
     output_path = OPATH_MOD.format(model=modelcls, timestamp=NOW.isoformat())
     with closing(open(output_path, 'wb')) as f:
         pickle.dump(tmp, f)

@@ -11,6 +11,8 @@ __all__ = ['Variable', 'ODEModel']
 
 logger = logging.getLogger()
 
+_least_squares = scipy.optimize.least_squares
+
 
 class Variable(object):
     """
@@ -359,16 +361,20 @@ class ODEModel(object):
             x_scale = 'jac'
         tmp = []
         for _x0 in x0seq:
-            res = scipy.optimize.least_squares(self._residuals, _x0,
-                                               x_scale=x_scale,
-                                               bounds=(lower_bounds,
-                                                       upper_bounds),
-                                               **kwargs)
-            tmp.append(res)
-        best_res = min(tmp, key=lambda k: k.cost)
-        self.err_ = pstderr(best_res)
-        self._assign(best_res.x, fitted=True)
-        self.cost_ = best_res.cost
+            try:
+                res = _least_squares(self._residuals, _x0, x_scale=x_scale,
+                                     bounds=(lower_bounds, upper_bounds),
+                                     **kwargs)
+                tmp.append(res)
+            except Exception:
+                logger.exception("Caught exception in fit. Traceback follows:")
+        if tmp:
+            best_res = min(tmp, key=lambda k: k.cost)
+            self.err_ = pstderr(best_res)
+            self._assign(best_res.x, fitted=True)
+            self.cost_ = best_res.cost
+        else:
+            logger.error("All fits failed!")
         del self.data
         del self.times
         return self
