@@ -1,7 +1,10 @@
 # TODO List
 
-X = done
-+ = won't fix
+Legend:
+```
+- [X] Task       = done
+- [+] ~~Task~~   = won't fix
+```
 
 ## High priority:
 - [X] Run fit with --fity0=non-obs on HoaxModel;
