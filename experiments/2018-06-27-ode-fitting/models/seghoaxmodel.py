@@ -5,7 +5,7 @@ from models.base import ODEModel, Variable
 __all__ = ['SegHoaxModel']
 
 # Number of steps of scipy.integrate.odeint
-MXSTEP = 5_000
+MXSTEP = 10_000
 
 
 class SegHoaxModel(ODEModel):
