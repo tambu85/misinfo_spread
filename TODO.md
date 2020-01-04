@@ -3,7 +3,7 @@
 Legend:
 ```
 - [X] Task       = done
-- [X] ~~Task~~   = won't fix
+- [X] ~~Task~~   = won't fix / not needed anymore
 ```
 
 ## High priority:
@@ -13,15 +13,15 @@ Legend:
 - [X] Compare results of fity0 alternatives and decide what is best option;
 - [X] Investigate odeint instabilities on SegHoaxModel, DoubleSIR, SEIZ (fit synth data);
 - [ ] Run fit for all models (fity0 = all);
-- [ ] Plot MAPE/SMAPE/LOG ACC RATIO/RMSE to do model selection;
+- [ ] Compare MAPE/SMAPE/LOG ACC RATIO/RMSE for model selection;
 
 ## Normal priority: 
 - [ ] Write k-means + PCA script for model-based clustering;
-- [ ] Forecast y(t) (for t=12h,24h,48h,168h) with variable-size training sebt;
+- [ ] Forecast y(t) (for t=12h,24h,48h,168h) with variable-size training set;
 - [ ] Repeat fit on the full dataset;
 
 ## Low priority:
-- [ ] Repeat fit number of tweets instead of number of users;
+- [ ] Repeat fit on number of tweets instead of number of users;
 - [ ] Fix issue with `ODEModel.summary` (see FIXME in `models/base.py`)
 - [ ] Fix issue with root logger (see FIXME in `fit.py`);
 - [X] Fix issue with `utils.logaccratio`
