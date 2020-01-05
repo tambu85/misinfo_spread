@@ -1,4 +1,4 @@
-""" Report fit results from pickled models """
+""" Report average error from pickled models and data file"""
 
 import os
 import numpy
@@ -9,8 +9,12 @@ import argparse
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('path', help='path to pickle files')
-parser.add_argument('--data', help='override data path', dest='data_path')
+parser.add_argument('--data', help='override %(metavar)s to data file',
+                    dest='data_path', metavar='PATH')
+parser.add_argument('--groupby', default='fity0', metavar='KEY',
+                    help='report error by %(metavar)s (default: %(default)s)')
 args = parser.parse_args()
+cwd = os.getcwd()
 os.chdir(args.path)
 
 runs = [pickle.load(open(p, 'rb')) for p in glob.glob('*.pickle')]
@@ -24,28 +28,29 @@ def err(k, model, metric='mape'):
     return model.error(data, metric=metric)
 
 
+metrics = ['mape', 'smape', 'logaccratio', 'rmse']
+data = []
 labels = []
-values = []
-
 
 for run in runs:
-    fit_type = run['fity0']
     models = run['models']
+    del run['models']
     for story, model in models.items():
-        for metric in ['mape', 'smape', 'logaccratio', 'rmse']:
-            label = (metric, fit_type, story)
+        tup = []
+        for metric in metrics:
             e = err(story, model, metric)
-            labels.append(label)
-            values.append(e)
+            tup.append(e)
+        data.append(tuple(tup))
+        label = dict(run)
+        label['story'] = story
+        labels.append(label)
 
-
-idx = pandas.MultiIndex.from_tuples(labels,
-                                    names=['fit_type', 'metric', 'story'])
-err_df = pandas.DataFrame(values, index=idx, columns=['error'])
-err_df = err_df.unstack(level=[0, 1])['error']
-print('Avg. Error (%):')
-print('===============')
-print(err_df.mean().unstack(level=0).round().astype('int'))
-print('Std. Err. (+/-)')
-print('===============')
-print(err_df.sem().unstack(level=0).round().astype('int'))
+idx_df = pandas.DataFrame(labels)
+del idx_df['path']
+del idx_df['seed']
+del idx_df['created']
+idx_arrays = [idx_df[col] for col in idx_df.columns]
+err_df = pandas.DataFrame(data, index=idx_arrays, columns=metrics)
+res_df = err_df.groupby(args.groupby).agg(['mean', 'sem'])
+print(res_df.round().astype('int'))
+os.chdir(cwd)
