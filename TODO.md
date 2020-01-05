@@ -14,6 +14,10 @@ Legend:
 - [X] Investigate odeint instabilities on SegHoaxModel, DoubleSIR, SEIZ (fit synth data);
 - [X] Run fit for all models (fity0 = all);
 - [X] Compare MAPE/SMAPE/LOG ACC RATIO/RMSE for model selection;
+- [ ] Do not set S to zero in fity0 = none;
+- [ ] Re-run `test_fitting.py` on HoaxModel;
+- [ ] Run fit for all models (fity0 = non-obs);
+- [ ] Recompute errors;
 
 ## Normal priority: 
 - [ ] Write k-means + PCA script for model-based clustering;
