@@ -13,7 +13,7 @@ Legend:
 - [X] Compare results of fity0 alternatives and decide what is best option;
 - [X] Investigate odeint instabilities on SegHoaxModel, DoubleSIR, SEIZ (fit synth data);
 - [X] Run fit for all models (fity0 = all);
-- [ ] Compare MAPE/SMAPE/LOG ACC RATIO/RMSE for model selection;
+- [X] Compare MAPE/SMAPE/LOG ACC RATIO/RMSE for model selection;
 
 ## Normal priority: 
 - [ ] Write k-means + PCA script for model-based clustering;
