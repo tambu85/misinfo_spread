@@ -12,7 +12,7 @@ Legend:
 - [X] Run fit with --fity0=none on HoaxModel;
 - [X] Compare results of fity0 alternatives and decide what is best option;
 - [X] Investigate odeint instabilities on SegHoaxModel, DoubleSIR, SEIZ (fit synth data);
-- [ ] Run fit for all models (fity0 = all);
+- [X] Run fit for all models (fity0 = all);
 - [ ] Compare MAPE/SMAPE/LOG ACC RATIO/RMSE for model selection;
 
 ## Normal priority: 
