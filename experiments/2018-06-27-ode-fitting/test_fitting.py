@@ -109,41 +109,31 @@ def main(config_path, modelcls='HoaxModel', seed=None):
 
     # Scenario 1) All: Fit unknowns = model parameter (theta) + initial
     # conditions (y0). All fits are best of three (3) attempts.
-    print("=" * TERM_COLS)
-    print("1) Fitting: All")
-    m1 = M()
-    m1.fit(data, nrep=3)
-    m1.summary()
-    print("RMSE = {:2f}".format(m1.error(data, metric='rmse')))
-
     # Scenario 2) Non-Obs: Like 1), but only BI0/FI0/S0 are unknown initial
     # conditions. BA0/FA0 are known and they are equal to the first observation
     # of the data.
-    print("=" * TERM_COLS)
-    print("2) Fitting: Non-Obs")
-    m2 = M()
-    m2.inity0(data[0, 0], data[0, 1])
-    m2.fit(data, nrep=3)
-    m2.summary()
-    print("RMSE = {:2f}".format(m2.error(data, metric='rmse')))
-
     # Scenario 3) None: BI0/FI0/S0 = 0; BA0/FA0 = first observation of the
     # data.
-    print("=" * TERM_COLS)
-    print("3) Fitting: None")
-    m3 = M()
-    m3.y0 = numpy.zeros(len(m3.y0))
-    m3.inity0(data[0, 0], data[0, 1])
-    m3.fit(data, nrep=3)
-    m3.summary()
-    print("RMSE = {:2f}".format(m3.error(data, metric='rmse')))
+    hows = ["all", "non-obs", "none"]
+    _models = [m]
+    for i, how in enumerate(hows):
+        print("=" * TERM_COLS)
+        print("{}) Fitting: {}".format(i + 1, how))
+        _m = M()
+        _m.fit(data, nrep=3)
+        _m.inity0(how, data[0, 0], data[0, 1])
+        _m.summary()
+        _models.append(_m)
 
     # Plot true model, data, and fitted models.
     fig, axs = plt.subplots(1, 2)
     plot(fig, m, t, data, label='True', ls='-', lw=2)
-    plot(fig, m1, t, label='Fit #1 All', ls='--')
-    plot(fig, m2, t, label='Fit #2 Non-Obs', ls='-.')
-    plot(fig, m3, t, label='Fit #3 None', ls=':')
+    linestyles = ["--", "-.", ":"]
+    for i, how in enumerate(hows):
+        _m = _models[i + 1]
+        label = "Fit #{} {}".format(i + 1, how)
+        ls = linestyles[i]
+        plot(fig, _m, t, label=label, ls=ls)
 
     plt.show()
     plt.tight_layout()
