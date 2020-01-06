@@ -51,6 +51,14 @@ del idx_df['seed']
 del idx_df['created']
 idx_arrays = [idx_df[col] for col in idx_df.columns]
 err_df = pandas.DataFrame(data, index=idx_arrays, columns=metrics)
+
+# Average error
 res_df = err_df.groupby(args.groupby).agg(['mean', 'sem'])
 print(res_df.round().astype('int'))
+
+# How often top ranked
+ranks_df = err_df.groupby('story').rank()
+res_df_1 = (ranks_df == 1).groupby(args.groupby).sum()
+print(res_df_1.round().astype(int))
+
 os.chdir(cwd)
