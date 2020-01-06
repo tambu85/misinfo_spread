@@ -94,11 +94,22 @@ class DoubleSIR(ODEModel):
         kwargs.update({'mxstep': max(MXSTEP, _mxstep)})
         return super(DoubleSIR, self).simulate(times, full=full, **kwargs)
 
-    def inity0(self, I1, I2):
+    def _inity0_nonobs(self, I1, I2):
         self.I1 = I1
         self.I2 = I2
         self.sir1.I = I1  # noqa
         self.sir2.I = I2  # noqa
+
+    def _inity0_none(self, I1, I2):
+        self.I1 = I1
+        self.I2 = I2
+        self.sir1.I = I1  # noqa
+        self.sir2.I = I2  # noqa
+        self.R1 = 0
+        self.R2 = 0
+        self.sir1.R = 0
+        self.sir2.R = 0
+        # do not set S1/S2 --- they always have to be fit
 
     # XXX not sure how to make sure that N stays the same across the two models
     def dy(self, y, t):

@@ -95,19 +95,7 @@ def fit(df, modelcls='HoaxModel', fity0="non-obs"):
     FA0 = df.loc[t0]['fact']
     M = getattr(models, modelcls)
     m = M()
-    # Initialize model compartments. Fit them or not?
-    if fity0 == "all":
-        # do nothing -- all y0 will be treated as fit unknowns.
-        pass
-    elif fity0 == "none":
-        # non-observables are set to zero, observables to the data
-        m.y0 = numpy.zeros(len(m.y0))
-        m.inity0(BA0, FA0)
-    elif fity0 == "non-obs":
-        # the default: fit non-observables, set observables to the data
-        m.inity0(BA0, FA0)
-    else:
-        raise ValueError("No such option: {}".format(fity0))
+    m.inity0(fity0, BA0, FA0)
     logger.info("Fit y0: {}".format(fity0))
     data = numpy.c_[df['fake'], df['fact']]
     m.fit(data)

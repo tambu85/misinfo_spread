@@ -64,9 +64,15 @@ class SEIZ(ODEModel):
         kwargs.update({'mxstep': max(MXSTEP, _mxstep)})
         return super(SEIZ, self).simulate(times, full=full, **kwargs)
 
-    def inity0(self, I, Z):
+    def _inity0_nonobs(self, I, Z):
         self.I = I  # noqa
         self.Z = Z
+
+    def _inity0_none(self, I, Z):
+        self.I = I  # noqa
+        self.Z = Z
+        self.E = 0
+        # do not set S --- it always has to be fit
 
     def dy(self, y, t):
         S, E, I, Z = y

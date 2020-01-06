@@ -183,10 +183,54 @@ class ODEModel(object):
         """
         raise NotImplementedError()
 
-    def inity0(self, **kwargs):
+    def inity0(self, how, **kwargs):
+        """
+        Set initial compartment values for fit.
+
+        Parameters
+        ==========
+        how - one of 'all', 'none', non-obs'
+
+        additional keyword arguments.
+
+        Notes
+        =====
+        Subclasses should not override this method. Instead, they should
+        implement the following two private methods:
+
+            _inity0_none  -- set all compartments
+
+            _inity0_nonobs -- set only "observable" compartments
+        """
+        if how == "all":
+            # do nothing -- all y0 will be treated as fit unknowns.
+            pass
+        elif how == "none":
+            # non-observables are set to zero, observables to the data
+            self._inity0_none(**kwargs)
+        elif how == "non-obs":
+            # the default: fit non-observables, set observables to the data
+            self._inity0_nonobs(**kwargs)
+        else:
+            raise ValueError("No such option: {}".format(how))
+
+    def _inity0_none(self, **kwargs):
         """
         Subclasses can implement this to initialize (part of) the initial
         conditions using the data.
+
+        Non-observables should be set to zero (except S), observables to the
+        data.
+        """
+        raise NotImplementedError()
+
+    def _inity0_nonobs(self, **kwargs):
+        """
+        Subclasses can implement this to initialize (part of) the initial
+        conditions using the data.
+
+        Non-observables should be all fit, observables should be set to the
+        data.
         """
         raise NotImplementedError()
 

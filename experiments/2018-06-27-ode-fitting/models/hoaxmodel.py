@@ -4,6 +4,7 @@ from models.base import ODEModel, Variable
 
 __all__ = ['HoaxModel']
 
+
 class HoaxModel(ODEModel):
     """
     Hoax Model by Tambuscio et al. This is the model without segregation.
@@ -63,7 +64,15 @@ class HoaxModel(ODEModel):
         """
         return y[:, :2]
 
-    def inity0(self, BA, FA):
+    def _inity0_none(self, BA, FA):
+        self.BA = BA
+        self.FA = FA
+        # set to 0
+        self.FI = 0
+        self.BI = 0
+        # do not set S -- always has to be fit
+
+    def _inity0_nonobs(self, BA, FA):
         self.BA = BA
         self.FA = FA
 

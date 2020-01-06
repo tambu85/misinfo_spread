@@ -97,9 +97,25 @@ class SegHoaxModel(ODEModel):
         kwargs.update({'mxstep': max(MXSTEP, _mxstep)})
         return super(SegHoaxModel, self).simulate(times, full=full, **kwargs)
 
-    def inity0(self, BA, FA):
-        self.BA_gu = BA
-        self.FA_gu = FA
+    def _inity0_none(self, BA, FA):
+        # split fake fact
+        self.BA_sk = 0.5 * BA
+        self.FA_sk = 0.5 * FA
+        self.BA_gu = 0.5 * BA
+        self.FA_gu = 0.5 * FA
+        # set to zero
+        self.FI_sk = 0
+        self.BI_sk = 0
+        self.FI_gu = 0
+        self.BI_gu = 0
+        # do not set S_sk / S_gu -- they always have to be fit
+
+    def _inity0_nonobs(self, BA, FA):
+        # split fake fact
+        self.BA_sk = 0.5 * BA
+        self.FA_sk = 0.5 * FA
+        self.BA_gu = 0.5 * BA
+        self.FA_gu = 0.5 * FA
 
     def dy(self, y, t):
         BA_gu, FA_gu, BI_gu, FI_gu, S_gu, BA_sk, FA_sk, BI_sk, FI_sk, S_sk = y
