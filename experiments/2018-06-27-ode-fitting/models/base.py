@@ -183,7 +183,7 @@ class ODEModel(object):
         """
         raise NotImplementedError()
 
-    def inity0(self, how, **kwargs):
+    def inity0(self, how, *args, **kwargs):
         """
         Set initial compartment values for fit.
 
@@ -207,10 +207,10 @@ class ODEModel(object):
             pass
         elif how == "none":
             # non-observables are set to zero, observables to the data
-            self._inity0_none(**kwargs)
+            self._inity0_none(*args, **kwargs)
         elif how == "non-obs":
             # the default: fit non-observables, set observables to the data
-            self._inity0_nonobs(**kwargs)
+            self._inity0_nonobs(*args, **kwargs)
         else:
             raise ValueError("No such option: {}".format(how))
 
