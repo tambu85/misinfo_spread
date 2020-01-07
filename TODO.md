@@ -16,8 +16,8 @@ Legend:
 - [X] Compare MAPE/SMAPE/LOG ACC RATIO/RMSE for model selection;
 - [X] Do not set S to zero in fity0 = none;
 - [X] Re-run `test_fitting.py` on HoaxModel;
-- [ ] Run fit for all models (fity0 = non-obs);
-- [ ] Recompute errors;
+- [X] Run fit for all models (fity0 = non-obs);
+- [X] Recompute errors;
 
 ## Normal priority: 
 - [ ] Write k-means + PCA script for model-based clustering;
