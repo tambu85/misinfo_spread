@@ -21,7 +21,8 @@ Legend:
 - [X] Remove cumsum() call from curves.py;
 - [ ] Truncate trailing zeroes from data in curves.py;
 - [ ] Refresh data;
-- [ ] In SegHoaxModel, change inity0 to use gamma parameter instead of 0.5.
+- [X] In SegHoaxModel, change inity0 to use gamma parameter instead of 0.5.
+- [ ] Re-run testing plots for SegHoaxModel;
 - [ ] Run fit with --fity0=non-obs;
 - [ ] Run fit with --fity0=all;
 - [ ] Check for numerical integration errors of SegHoaxModel fit (if any); 
@@ -29,6 +30,7 @@ Legend:
 - [ ] Update all fit results on presentation;
 
 ## Normal priority: 
+- [ ] Write script to sweep parameter space for systematic testing fit reconstruction;
 - [ ] Write k-means + PCA script for model-based clustering;
 - [ ] Forecast y(t) (for t=12h,24h,48h,168h) with variable-size training set;
 - [ ] Repeat fit on the full dataset;
