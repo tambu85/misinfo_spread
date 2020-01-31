@@ -19,9 +19,11 @@ Legend:
 - [X] Run fit for all models (fity0 = non-obs);
 - [X] Recompute errors;
 - [X] Remove cumsum() call from curves.py;
-- [ ] Truncate trailing zeroes from data in curves.py;
+- [X] Truncate trailing zeroes from data in curves.py;
+- [ ] Fix issues with `_resample` (see FIXME in `curves.py`);
+- [ ] Fix issue with `_align` and (see FIXME in `curves.py`);
 - [ ] Refresh data;
-- [X] In SegHoaxModel, change inity0 to use gamma parameter instead of 0.5.
+- [X] In SegHoaxModel, change inity0 to use gamma parameter instead of 0.5;
 - [ ] Re-run testing plots for SegHoaxModel;
 - [ ] Run fit with --fity0=non-obs;
 - [ ] Run fit with --fity0=all;
