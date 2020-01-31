@@ -118,7 +118,7 @@ def _resample(df, lag, freq):
     t0 = df.index[0]
     idx = pandas.date_range(start=t0, periods=lag, freq=freq)
     df = df.reindex(idx)
-    return df.fillna(0).cumsum()
+    return df.fillna(0)
 
 
 def _align(df, lag):
