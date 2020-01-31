@@ -18,7 +18,7 @@ Legend:
 - [X] Re-run `test_fitting.py` on HoaxModel;
 - [X] Run fit for all models (fity0 = non-obs);
 - [X] Recompute errors;
-- [ ] Remove cumsum() call from curves.py;
+- [X] Remove cumsum() call from curves.py;
 - [ ] Refresh data;
 - [ ] Run fit with --fity0=non-obs;
 - [ ] Run fit with --fity0=all;
