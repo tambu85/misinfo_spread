@@ -124,7 +124,7 @@ def _resample(df, lag, freq):
 def _align(df, lag):
     """
     For each story, create a single data frame by aligning the 'fact' curve to
-    the 'fake' curve.
+    the 'fake' curve. Truncate tail of trailing zeroes.
     """
     story_id = df.index.get_level_values(0)[0]
     a = df.loc[story_id, 'fake']
@@ -134,6 +134,9 @@ def _align(df, lag):
                            'fact': list(b['active_users'][:lag])},
                           index=a[:lag].index)
     df.fillna(0, inplace=True)
+    # truncate tail of trailing zeroes (both fact and fake)
+    idx = (df == 0).all(axis=1)[::-1].cumprod()[::-1].astype(bool)
+    df = df.mask(idx).dropna()
     return df
 
 
