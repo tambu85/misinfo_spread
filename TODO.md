@@ -18,6 +18,9 @@ Legend:
 - [X] Re-run `test_fitting.py` on HoaxModel;
 - [X] Run fit for all models (fity0 = non-obs);
 - [X] Recompute errors;
+- [ ] Check: are we fitting cumulative or non-cumulative data? (Should be the latter.)
+- [ ] Why is SegHoaxModel worse than HoaxModel? Could it be that it is the regime when it does not work? Inspect fits and see if it is due to integration failure.
+- [ ] Make panel plot with fit of each story.
 
 ## Normal priority: 
 - [ ] Write k-means + PCA script for model-based clustering;
