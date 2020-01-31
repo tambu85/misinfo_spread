@@ -113,10 +113,13 @@ def _resample(df, lag, freq):
     believers/fact-checkers at time t.)
     """
     df.set_index('created_at', inplace=True)
+    # FIXME it should be the number of users, not the number of tweets!
     df = df.resample('h').agg({'tweet_id': 'count'})
     df = df.rename(columns={'tweet_id': 'active_users'})
     t0 = df.index[0]
-    idx = pandas.date_range(start=t0, periods=lag, freq=freq)
+    t1 = df.index[-1]
+    # FIXME: chose t1 so that we cover 95% of the tweets (both fake and fact)
+    idx = pandas.date_range(start=t0, end=t1, freq=freq)  # periods=lag,
     df = df.reindex(idx)
     return df.fillna(0)
 
@@ -130,9 +133,11 @@ def _align(df, lag):
     a = df.loc[story_id, 'fake']
     b = df.loc[story_id, 'fact']
     a, b = a.align(b)
-    df = pandas.DataFrame({'fake': list(a['active_users'][:lag]),
-                           'fact': list(b['active_users'][:lag])},
-                          index=a[:lag].index)
+    # FIXME cleanup commented text after _resample has been fixed, remove
+    # second argument (lag) from function (and fix how it is called).
+    df = pandas.DataFrame({'fake': list(a['active_users']),  # [:lag]
+                           'fact': list(b['active_users'])},  # [:lag]
+                          index=a.index)  # [:lag]
     df.fillna(0, inplace=True)
     # truncate tail of trailing zeroes (both fact and fake)
     idx = (df == 0).all(axis=1)[::-1].cumprod()[::-1].astype(bool)
