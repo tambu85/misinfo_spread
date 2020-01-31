@@ -19,12 +19,14 @@ Legend:
 - [X] Run fit for all models (fity0 = non-obs);
 - [X] Recompute errors;
 - [X] Remove cumsum() call from curves.py;
+- [ ] Truncate trailing zeroes from data in curves.py;
 - [ ] Refresh data;
+- [ ] In SegHoaxModel, change inity0 to use gamma parameter instead of 0.5.
 - [ ] Run fit with --fity0=non-obs;
 - [ ] Run fit with --fity0=all;
-- [ ] Update all fit results on presentation;
 - [ ] Check for numerical integration errors of SegHoaxModel fit (if any); 
 - [ ] Plot all fits using panel plot;
+- [ ] Update all fit results on presentation;
 
 ## Normal priority: 
 - [ ] Write k-means + PCA script for model-based clustering;
