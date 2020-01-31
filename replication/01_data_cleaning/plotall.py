@@ -10,6 +10,7 @@ def plotone(group, key):
     group.reset_index(inplace=True)
     group.plot(y='fake', ax=ax, legend=False)
     group.plot(y='fact', ax=ax, legend=False)
+    ax.set_title(key, fontsize='small')
 
 
 def plot(path, nrows=5, ncols=5):
@@ -21,6 +22,7 @@ def plot(path, nrows=5, ncols=5):
         h, k = numpy.unravel_index(i, axs.shape)
         plt.sca(axs[h, k])
         plotone(group, key)
+    plt.tight_layout()
     plt.show()
 
 
