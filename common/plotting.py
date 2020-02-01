@@ -1,3 +1,4 @@
+
 import numpy
 import matplotlib
 matplotlib.rcParams['text.usetex'] = False
@@ -52,13 +53,13 @@ def plotall(df, max_nrows, max_ncols, max_figsize, **kwargs):
         subplots_kwargs = dict(nrows=nrows, ncols=ncols,
                                figsize=figsize)
 
-        fig, axs = plt.subplots(**subplots_kwargs)
+        fig, axs = plt.subplots(**subplots_kwargs, sharex=True)
 
-        for k, ax in zip(keys_to_plot, axs.ravel()):
-            ts = df.loc[k]
+        for k, ax in zip(keys_to_plot, numpy.ravel(axs)):
+            ts = df.loc[k].set_index('timestamp')
             t0 = ts.index[0].date()
             ts = ts.reset_index(drop=True)
-            ts.plot(ax=ax, color=['r','b'], legend=False, **kwargs)
+            ts.plot(ax=ax, color=['r', 'b'], legend=False, **kwargs)
             ax.set_xlabel('')
             ax.set_title("${}$".format(k))
             ymin, ymax = ax.get_ylim()
@@ -95,7 +96,7 @@ def plotall(df, max_nrows, max_ncols, max_figsize, **kwargs):
 
         # set tight layout
         plt.tight_layout(pad=0.1)
-        #plt.savefig("ALLstories_DEC.pdf")
+        # plt.savefig("ALLstories_DEC.pdf")
         plt.show()
 
 
@@ -119,23 +120,26 @@ def plotonewithurls(df, k):
     fig.suptitle(title)
 
     ax1 = plt.subplot(1, 3, 1)
-    df['fake'].plot(legend=False, color='b', ls='--', ax=ax1, title="Fake news")
+    df['fake'].plot(legend=False, color='b', ls='--', ax=ax1,
+                    title="Fake news")
     ax1.set_yscale('symlog')
     ymin, ymax = ax1.get_ylim()
     ax1.set_ylim(ymin, ymax * 10)
     ax1.set_xlabel('Hours since $t_0$')
     ax1.set_ylabel('Active Users')
     ax2 = plt.subplot(1, 3, 2)
-    df['fact'].plot(legend=False, color='r', ls='--', ax=ax2, title="Fact-check")
+    df['fact'].plot(legend=False, color='r', ls='--', ax=ax2,
+                    title="Fact-check")
     ax2.set_yscale('symlog')
     ymin, ymax = ax2.get_ylim()
     ax2.set_ylim(ymin, ymax * 10)
     ax2.set_xlabel('Hours since $t_0$')
 
     # ax3 = plt.subplot(1, 3, 3)
-    # df['fake'].sum(axis=1).plot(legend=False, color='b', ls='-', ax=ax3, label='fake')
-    # df['fact'].sum(axis=1).plot(legend=False, color='r', ls='-', ax=ax3, label='fact')
-    # ax3.set_title("Total")
+    # df['fake'].sum(axis=1).plot(legend=False, color='b', ls='-', ax=ax3,
+    # label='fake')
+    # df['fact'].sum(axis=1).plot(legend=False, color='r', ls='-', ax=ax3,
+    # label='fact') ax3.set_title("Total")
     # ax3.set_yscale('symlog')
     # ymin, ymax = ax3.get_ylim()
     # ax3.set_ylim(ymin, ymax * 10)
@@ -143,17 +147,19 @@ def plotonewithurls(df, k):
     # ax3.legend(loc='best')
 
     ax3 = plt.subplot(1, 3, 3)
-    df['fake'].sum(axis=1).plot(legend=False, color='b', ls='-', ax=ax3, label='fake')
+    df['fake'].sum(axis=1).plot(legend=False, color='b', ls='-', ax=ax3,
+                                label='fake')
     ax3.set_ylabel('Fake Sharing', color='b')
     ax3.set_title("Total")
     ax3.set_yscale('symlog')
     ymin, ymax = ax3.get_ylim()
     ax3.set_ylim(ymin, ymax * 10)
     ax3.set_xlabel('Hours since $t_0$')
-    ax4=ax3.twinx()
-    df['fact'].sum(axis=1).plot(legend=False, color='r', ls='-', ax=ax4, label='fact')
+    ax4 = ax3.twinx()
+    df['fact'].sum(axis=1).plot(legend=False, color='r', ls='-', ax=ax4,
+                                label='fact')
     ax4.set_ylabel('Fact Sharing', color='r')
-    ax4.tick_params('y',colors='r')
+    ax4.tick_params('y', colors='r')
 
     plt.subplots_adjust(top=0.88)
     plt.tight_layout()
