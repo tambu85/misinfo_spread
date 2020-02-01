@@ -24,7 +24,7 @@ Legend:
 - [X] Fix issue with `_align` and (see FIXME in `curves.py`);
 - [X] Refresh data;
 - [X] In SegHoaxModel, change inity0 to use gamma parameter instead of 0.5;
-- [ ] Re-run testing plots for SegHoaxModel;
+- [ ] Re-run testing plots for SegHoaxModel for slides;
 - [ ] Run fit with --fity0=non-obs;
 - [ ] Run fit with --fity0=all;
 - [ ] Check SegHoaxModel did not have integration errors; 
