@@ -18,6 +18,15 @@ def plot(path, nrows=5, ncols=5):
     grouped = df.groupby('story_id')
     fig, axs = plt.subplots(nrows, ncols, sharex=True)
 
+    # Check nrows and ncols OK
+    N_plots = nrows * ncols
+    N_groups = len(grouped.groups)
+    if N_groups > N_plots:
+        import sys
+        print("Not enough rows/cols: {}; need {}.".format(N_plots, N_groups),
+              file=sys.stderr)
+        sys.exit(1)
+
     for i, (key, group) in enumerate(grouped):
         h, k = numpy.unravel_index(i, axs.shape)
         plt.sca(axs[h, k])
