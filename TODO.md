@@ -27,7 +27,7 @@ Legend:
 - [ ] Re-run testing plots for SegHoaxModel;
 - [ ] Run fit with --fity0=non-obs;
 - [ ] Run fit with --fity0=all;
-- [ ] Check for numerical integration errors of SegHoaxModel fit (if any); 
+- [ ] Check SegHoaxModel did not have integration errors; 
 - [ ] Plot all fits using panel plot;
 - [ ] Update all fit results on presentation;
 
