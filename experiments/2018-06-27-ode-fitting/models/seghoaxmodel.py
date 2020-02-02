@@ -99,10 +99,10 @@ class SegHoaxModel(ODEModel):
 
     def _inity0_none(self, BA, FA):
         # split fake fact
-        self.BA_sk = (1.0 - self.gamma) * BA
-        self.FA_sk = (1.0 - self.gamma) * FA
-        self.BA_gu = self.gamma * BA
-        self.FA_gu = self.gamma * FA
+        self.BA_sk = 0.5 * BA
+        self.FA_sk = 0.5 * FA
+        self.BA_gu = 0.5 * BA
+        self.FA_gu = 0.5 * FA
         # set to zero
         self.FI_sk = 0
         self.BI_sk = 0
@@ -112,10 +112,10 @@ class SegHoaxModel(ODEModel):
 
     def _inity0_nonobs(self, BA, FA):
         # split fake fact
-        self.BA_sk = (1.0 - self.gamma) * BA
-        self.FA_sk = (1.0 - self.gamma) * FA
-        self.BA_gu = self.gamma * BA
-        self.FA_gu = self.gamma * FA
+        self.BA_sk = 0.5 * BA
+        self.FA_sk = 0.5 * FA
+        self.BA_gu = 0.5 * BA
+        self.FA_gu = 0.5 * FA
 
     def dy(self, y, t):
         BA_gu, FA_gu, BI_gu, FI_gu, S_gu, BA_sk, FA_sk, BI_sk, FI_sk, S_sk = y
