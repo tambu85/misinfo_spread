@@ -26,10 +26,13 @@ Legend:
 - [X] In SegHoaxModel, change inity0 to use gamma parameter instead of 0.5;
 - [X] Run fit with --fity0=non-obs;
 - [ ] Run fit with --fity0=all;
-- [ ] Re-run testing plots for SegHoaxModel for slides;
-- [ ] Check SegHoaxModel did not have integration errors; 
-- [ ] Plot all fits using panel plot;
-- [ ] Update all fit results on presentation;
+- [ ] Run fit with --fity0=none;
+- [ ] Plot fit results: same model different fity0;
+- [ ] Plot fit results: different models same fity0 (for non-obs, all, none);
+- [X] ~~Re-run testing plots for SegHoaxModel for slides;~~
+- [ ] Inspect fit results for possible integration errors; 
+- [ ] Extract fitted parameters;
+- [ ] Update presentation slides (new plots, fitted parameters);
 
 ## Normal priority: 
 - [ ] Write script to sweep parameter space for systematic testing fit reconstruction;
