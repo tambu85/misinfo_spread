@@ -33,6 +33,7 @@ Legend:
 - [ ] Inspect fit results for possible integration errors; 
 - [ ] Extract fitted parameters;
 - [ ] Update presentation slides (new plots, fitted parameters);
+- [ ] Add option to cumulate observations and model before fitting with `least_squares`;
 
 ## Normal priority: 
 - [ ] Write script to sweep parameter space for systematic testing fit reconstruction;
