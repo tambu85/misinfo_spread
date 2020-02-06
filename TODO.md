@@ -25,7 +25,7 @@ Legend:
 - [X] Refresh data;
 - [X] In SegHoaxModel, change inity0 to use gamma parameter instead of 0.5;
 - [X] Run fit with --fity0=non-obs;
-- [ ] Run fit with --fity0=all;
+- [X] Run fit with --fity0=all;
 - [ ] Run fit with --fity0=none;
 - [ ] Plot fit results: same model different fity0;
 - [ ] Plot fit results: different models same fity0 (for non-obs, all, none);
