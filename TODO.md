@@ -26,14 +26,13 @@ Legend:
 - [X] In SegHoaxModel, change inity0 to use gamma parameter instead of 0.5;
 - [X] Run fit with --fity0=non-obs;
 - [X] Run fit with --fity0=all;
-- [ ] Run fit with --fity0=none;
+- [X] Run fit with --fity0=none;
 - [ ] Plot fit results: same model different fity0;
 - [ ] Plot fit results: different models same fity0 (for non-obs, all, none);
 - [X] ~~Re-run testing plots for SegHoaxModel for slides;~~
 - [ ] Inspect fit results for possible integration errors; 
 - [ ] Extract fitted parameters;
-- [ ] Update presentation slides (new plots, fitted parameters);
-- [ ] Add option to cumulate observations and model before fitting with `least_squares`;
+- [X] Update presentation slides (new plots, fitted parameters);
 
 ## Normal priority: 
 - [ ] Write script to sweep parameter space for systematic testing fit reconstruction;
@@ -42,6 +41,7 @@ Legend:
 - [ ] Repeat fit on the full dataset;
 
 ## Low priority:
+- [ ] Add option to cumulate observations and model before fitting with `least_squares`;
 - [ ] Repeat fit on number of tweets instead of number of users;
 - [ ] Fix issue with `ODEModel.summary` (see FIXME in `models/base.py`)
 - [ ] Fix issue with root logger (see FIXME in `fit.py`);
