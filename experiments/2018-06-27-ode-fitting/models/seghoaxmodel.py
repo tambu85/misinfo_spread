@@ -4,6 +4,8 @@ from models.base import ODEModel, Variable
 
 __all__ = ['SegHoaxModel']
 
+# NOTE (Apr 24, 2021): pvgu is set to 0 in the __init__
+
 # Number of steps of scipy.integrate.odeint
 MXSTEP = 10_000
 
@@ -56,7 +58,7 @@ class SegHoaxModel(ODEModel):
     pvsk = Variable(lower=0, upper=1)
     tauinv = Variable(lower=0, upper=1)
     alpha = Variable(lower=0, upper=1)
-    seg = Variable(lower=0, upper=1)
+    seg = Variable(lower=0.5, upper=1)
     gamma = Variable(lower=0, upper=1)
 
     _y0 = [
@@ -82,6 +84,11 @@ class SegHoaxModel(ODEModel):
     BI_sk = Variable(lower=0)
     FI_sk = Variable(lower=0)
     S_sk = Variable(lower=0)
+
+    # Fix pvgu to 0
+    def __init__(self, *args, **kwargs):
+        super(SegHoaxModel, self).__init__(*args, **kwargs)
+        self.pvgu = 0
 
     @staticmethod
     def obs(y):
