@@ -4,6 +4,6 @@ dependencies:
   - jupyter
   - matplotlib
   - numpy
-  - pandas
+  - pandas>=1.3.2
   - pytables
   - scipy
