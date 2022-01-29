@@ -52,7 +52,8 @@ def main(args):
                             ncols=ncols, 
                             figsize=(1.5 * ncols, 1.25 * nrows), 
                             sharex=args.sharexy, 
-                            sharey=args.sharexy)
+                            sharey=args.sharexy,
+                            constrained_layout=True)
     for (key, ax) in zip(stories, axs.flatten()):
         g = grouped.get_group(key).query('fake > 0 & fact > 0')
         g.plot(ax=ax, kind='scatter', x='fake', y='fact', 
@@ -62,7 +63,9 @@ def main(args):
             x = numpy.linspace(g['fake'].min(), g['fake'].max())
             y = res[0] * x + res[1]
             ax.plot(x, y, "--", color="black")
-        ax.set_title(key)
+        ax.set_title(key, fontsize='medium')
+        ax.set_xlabel("Fake news", fontsize='small')
+        ax.set_ylabel("Fact-checking", fontsize='small')
     if args.zero:
         if args.sharexy:
             for ax in axs.flatten():
@@ -73,7 +76,6 @@ def main(args):
             ylim_upper = max(ax.get_ylim()[1] for ax in axs.flatten())
             ax.set_xlim(1 if args.loglog else 0, xlim_upper)
             ax.set_ylim(0.8 if args.loglog else 0, ylim_upper)
-    plt.tight_layout()
     if args.figure is not None:
         plt.savefig(args.figure)
         print("Written: {}".format(args.figure))
