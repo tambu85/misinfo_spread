@@ -531,6 +531,6 @@ class ODEModel(object):
         elif metric == 'logaccratio':
             return logaccratio(y, data)
         elif metric == 'rmse':
-            return numpy.sqrt(self.cost_)
+            return numpy.sqrt(self.cost_) # should be rmse(y, data) (with rmse function, currently missing)
         else:
             raise ValueError("No such metric: {}".format(metric))

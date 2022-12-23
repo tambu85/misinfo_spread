@@ -60,7 +60,7 @@ class HoaxModel(ODEModel):
     @staticmethod
     def obs(y):
         """
-        Returns BA and FA
+        Returns BA (fake) and FA (fact)
         """
         return y[:, :2]
 
