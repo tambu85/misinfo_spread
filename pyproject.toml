@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "misinfo_spread"
+version = "0.0.1"
+authors = [
+    { name="Marcella Tambuscio", email="marcella.tambuscio@oeaw.ac.at" },
+    { name="Diego Fregolent", email="dfmo@umd.edu"},
+    { name="Meghna Chaudari", email="meghna1@usf.edu" },
+    { name="Giovanni Luca Ciampaglia", email="gciampag@umd.edu" },
+]
+description = "Code and data for misinfo_spread paper"
+readme = "README.md"
+# requires-python = ">= 3.7"
+
+# specified in setuptools script
+dynamic = ["dependencies"]
+
+[project.urls]
+"Homepage" = "https://github.com/tambu85/misinfo_spread"
+"Bug Tracker" = "https://github.com/tambu85/misinfo_spread/issues"
