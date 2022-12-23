@@ -21,7 +21,8 @@ create temporary table matches (
     fake_url varchar,
     fact_url varchar
 );
-\copy matches from '../csv/matching_export_of_merge_sheet.csv' csv header;
+--\copy matches from '../csv/matching_export_of_merge_sheet.csv' csv header;
+\copy matches from '../csv/matches_annotated_meghna.csv' csv header;
 
 -- Create at temporary view for the join operation. Two things are noteworthy
 -- here: 
