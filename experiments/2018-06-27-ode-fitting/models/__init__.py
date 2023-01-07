@@ -30,3 +30,4 @@ from models.hoaxmodel import *
 from models.seghoaxmodel import *
 from models.sir import *
 from models.seiz import *
+from models.probhoaxmodel import *

@@ -2,7 +2,20 @@
 
 import numpy
 
-from hoaxmodel import _checkparams
+from .hoaxmodel import HoaxModel
+
+__all__ = ['probmodel', 'simprobmodel']
+
+
+def _checkparams(pv, tauinv, alpha):
+    """
+    Create a HoaxModel instance and try to assign parameters. If value are not
+    within range, exception will be raised
+    """
+    model = HoaxModel()
+    model.pv = pv
+    model.tauinv = tauinv
+    model.alpha = alpha
 
 
 def probmodel(y, t, pv, tauinv, alpha):
@@ -25,14 +38,14 @@ def probmodel(y, t, pv, tauinv, alpha):
     """
     _checkparams(pv, tauinv, alpha)
     y = numpy.asfarray(y)
-    FA, BA, BI, FI, S = y
+    BA, FA, BI, FI, S = y
     N = y.sum()
     f = BA / N
     y1 = [
-        # FA (fact-checkers, active)
-        f * FI + (1.0 - tauinv) * FA,
         # BA (believers, active)
         (1.0 - pv) * f * BI + (1.0 - tauinv) * (1.0 - pv) * BA,
+        # FA (fact-checkers, active)
+        f * FI + (1.0 - tauinv) * FA,
         # BI (believers, inactive)
         alpha * f * S + tauinv * BA + (1.0 - pv) * (1.0 - f) * BI,
         # FI (fact-checkers, inactive)
