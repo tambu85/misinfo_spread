@@ -39,7 +39,7 @@ if py_vers.major >= 3 and py_vers.minor >= 3:
     import shutil
     # on Python 3.3+ use os.get_terminal_size
     TERM_COLS = shutil.get_terminal_size().columns
-elif os.name is "posix":
+elif os.name == "posix":
     # if that's not available ...
     # ... on Linux/Unix use stty to get terminal size
     import subprocess
