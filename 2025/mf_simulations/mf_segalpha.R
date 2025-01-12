@@ -1,7 +1,3 @@
-#plot the differences among simulations results and mean field 
-#run before collect plots and then this one
-#palette_: VIRIDIS-INFERNO
-
 library(viridis)
 library(reshape2)
 library(ggplot2)
